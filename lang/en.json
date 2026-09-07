@@ -627,5 +627,15 @@
     "مبلغ :amount تومان به کیف پول شما برگشت خورد. (:reason)": ":amount Toman returned to your wallet. (:reason)",
     "کیف پول شما شارژ شد": "Your wallet was topped up",
     "از کیف پول شما کسر شد": "Deducted from your wallet",
-    "مبلغ :amount تومان (:reason). موجودی فعلی: :balance": ":amount Toman (:reason). Current balance: :balance"
+    "مبلغ :amount تومان (:reason). موجودی فعلی: :balance": ":amount Toman (:reason). Current balance: :balance",
+    "لینک فایل‌های عمومی (storage)": "Public files link (storage)",
+    "برای نمایش رسیدها و فایل‌های پیوست لازم است. اگر روی هاست SSH ندارید، از اینجا بسازید.": "Required to display receipts and attachments. If you have no SSH on your host, create it here.",
+    "متصل است": "Connected",
+    "ساخت لینک storage": "Create storage link",
+    "کمتر از یک دقیقه — رایگان!": "Less than a minute — free!",
+    "پیشنهادهای ویژه": "Featured deals",
+    "فقط ۳ قدم تا اتصال": "Just 3 steps to connect",
+    "اپلیکیشن را نصب کنید": "Install the app",
+    "لینک storage ساخته شد. ✅": "Storage link created. ✅",
+    "ساخت لینک ناموفق بود: :msg": "Failed to create link: :msg"
 }

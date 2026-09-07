@@ -44,6 +44,8 @@ class PagesRenderTest extends TestCase
         $this->get('/')->assertOk();
         $this->get('/login')->assertOk();
         $this->get('/register')->assertOk();
+        $this->get('/sitemap.xml')->assertOk();
+        // نکته: robots.txt فایل استاتیک public/ است و فقط با وب‌سرور واقعی سرو می‌شود، نه در تست.
     }
 
     public function test_admin_can_login_with_username_admin(): void
@@ -60,7 +62,7 @@ class PagesRenderTest extends TestCase
     {
         $user = $this->seedUser();
 
-        $pages = ['/dashboard', '/orders', '/wallet', '/tickets', '/tickets/create', '/referrals', '/notifications', '/trial'];
+        $pages = ['/dashboard', '/orders', '/wallet', '/tickets', '/tickets/create', '/referrals', '/notifications', '/trial', '/profile', '/profile/password'];
 
         foreach ($pages as $page) {
             $this->actingAs($user)->get($page)->assertOk();
@@ -74,7 +76,7 @@ class PagesRenderTest extends TestCase
         $pages = [
             '/admin', '/admin/payments', '/admin/wallet-deposits', '/admin/orders',
             '/admin/tickets', '/admin/broadcast', '/admin/users', '/admin/plans',
-            '/admin/inbounds', '/admin/settings',
+            '/admin/inbounds', '/admin/settings', '/admin/setup', '/admin/activity-logs',
         ];
 
         foreach ($pages as $page) {

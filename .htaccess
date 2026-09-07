@@ -1,0 +1,12 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # هاست اشتراکی: اگر دامنه به ریشه پروژه وصل است، همه درخواست‌ها به public/ بروند
+    # (اگر دامنه مستقیم به public/ وصل است، این فایل لازم نیست)
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# جلوگیری از دسترسی مستقیم به فایل‌های حساس
+<FilesMatch "^\.env|composer\.(json|lock)|package(-lock)?\.json|vite\.config\.js|artisan$">
+    Require all denied
+</FilesMatch>

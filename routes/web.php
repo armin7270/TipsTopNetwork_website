@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\BuyController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DeployController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OnlinePaymentController;
@@ -28,6 +29,10 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/sitemap.xml', function () {
     return response()->view('sitemap')->header('Content-Type', 'application/xml');
 })->name('sitemap');
+
+// نقاط کمکی دیپلوی هاست اشتراکی (محافظت با DEPLOY_KEY + محدودیت نرخ)
+Route::get('/deploy/migrate', [DeployController::class, 'migrate'])->middleware('throttle:10,1')->name('deploy.migrate');
+Route::get('/deploy/cron', [DeployController::class, 'cron'])->middleware('throttle:30,1')->name('deploy.cron');
 
 // تغییر زبان (فارسی/انگلیسی)
 Route::get('/lang/{locale}', function (string $locale) {
@@ -155,6 +160,7 @@ Route::post('/webhooks/nowpayments', function (Request $request) {
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/', [Admin\DashboardController::class, 'index'])->name('dashboard');
     Route::get('/setup', [Admin\SetupController::class, 'index'])->middleware('admin.section:super')->name('setup');
+    Route::post('/setup/link-storage', [Admin\SetupController::class, 'linkStorage'])->middleware('admin.section:super')->name('setup.link-storage');
     Route::get('/activity-logs', [Admin\ActivityLogController::class, 'index'])->middleware('admin.section:super')->name('activity-logs.index');
 
     // پرداخت‌ها (صف تایید کارت به کارت)

@@ -10,23 +10,30 @@
     --font-sans: 'Vazirmatn', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 
-    /* پالت رنگ مدرن — Neon Glow */
-    --color-neon-violet: #8b5cf6;
-    --color-neon-fuchsia: #d946ef;
-    --color-neon-cyan: #22d3ee;
-    --color-neon-blue: #3b82f6;
-    --color-night: #0a0e1a;
-    --color-night-soft: #111827;
+    /* پالت آب‌نباتی — Candy Liquid Glass */
+    --color-candy-pink: #ff5fa2;
+    --color-candy-orange: #ff9a3c;
+    --color-candy-yellow: #ffd93c;
+    --color-candy-green: #4ade80;
+    --color-candy-cyan: #38e1ff;
+    --color-candy-violet: #8b5cf6;
+    --color-candy-blue: #4f8dff;
 
-    --shadow-glass: 0 8px 32px rgb(30 41 59 / 0.12), inset 0 1px 0 rgb(255 255 255 / 0.6);
-    --shadow-glass-dark: 0 8px 32px rgb(0 0 0 / 0.45), inset 0 1px 0 rgb(255 255 255 / 0.08);
-    --shadow-glow: 0 10px 40px rgb(139 92 246 / 0.4);
-    --shadow-glow-cyan: 0 10px 40px rgb(34 211 238 / 0.35);
-    --shadow-glow-pink: 0 10px 40px rgb(217 70 239 / 0.35);
+    --shadow-glass: 0 12px 40px rgb(255 95 162 / 0.10), 0 4px 16px rgb(30 41 59 / 0.08), inset 0 1px 0 rgb(255 255 255 / 0.7);
+    --shadow-glass-dark: 0 12px 40px rgb(0 0 0 / 0.5), inset 0 1px 0 rgb(255 255 255 / 0.12);
+    --shadow-glow: 0 12px 34px rgb(255 95 162 / 0.45);
+    --shadow-pop: 0 18px 45px -12px rgb(139 92 246 / 0.45);
+    --shadow-chip-pink: 0 10px 24px -8px rgb(255 95 162 / 0.7);
+    --shadow-chip-orange: 0 10px 24px -8px rgb(255 154 60 / 0.7);
+    --shadow-chip-yellow: 0 10px 24px -8px rgb(255 217 60 / 0.7);
+    --shadow-chip-green: 0 10px 24px -8px rgb(74 222 128 / 0.7);
+    --shadow-chip-cyan: 0 10px 24px -8px rgb(56 225 255 / 0.7);
+    --shadow-chip-violet: 0 10px 24px -8px rgb(139 92 246 / 0.7);
+    --shadow-chip-blue: 0 10px 24px -8px rgb(79 141 255 / 0.7);
 }
 
 /* ============================================================
-   پس‌زمینه Aurora + گرید متحرک
+   پس‌زمینه مش رنگین‌کمانی + حباب‌های شناور
    ============================================================ */
 .aurora {
     position: fixed;
@@ -34,96 +41,119 @@
     z-index: -2;
     overflow: hidden;
     pointer-events: none;
-    background: linear-gradient(160deg, #eef2ff 0%, #fdf2f8 35%, #ecfeff 70%, #f5f3ff 100%);
+    background: linear-gradient(180deg, #fff8fb 0%, #fff6ec 30%, #f0f9ff 62%, #f5f0ff 100%);
 }
 
 .dark .aurora {
-    background: linear-gradient(165deg, #070b18 0%, #0b1026 40%, #070b18 70%, #150a28 100%);
+    background: linear-gradient(180deg, #170a26 0%, #0c0a24 45%, #0a0f22 75%, #190b2e 100%);
 }
 
-/* گرید پرسپکتیو متحرک */
-.aurora::after {
+/* دانه‌های رنگی محو */
+.aurora::before {
     content: '';
     position: absolute;
     inset: 0;
-    background-image:
-        linear-gradient(rgb(99 102 241 / 0.055) 1px, transparent 1px),
-        linear-gradient(90deg, rgb(99 102 241 / 0.055) 1px, transparent 1px);
-    background-size: 44px 44px;
-    mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, black 30%, transparent 100%);
-    animation: grid-pan 32s linear infinite;
+    background-image: radial-gradient(rgb(255 95 162 / 0.16) 1.5px, transparent 1.5px),
+        radial-gradient(rgb(56 225 255 / 0.14) 1.5px, transparent 1.5px),
+        radial-gradient(rgb(255 217 60 / 0.16) 1.5px, transparent 1.5px);
+    background-size: 90px 90px, 130px 130px, 70px 70px;
+    background-position: 0 0, 40px 60px, 20px 10px;
+    mask-image: radial-gradient(ellipse 100% 80% at 50% 0%, black 20%, transparent 95%);
+    animation: dots-drift 40s linear infinite;
 }
 
-@keyframes grid-pan {
-    from { background-position: 0 0; }
-    to { background-position: 44px 88px; }
+@keyframes dots-drift {
+    from { background-position: 0 0, 40px 60px, 20px 10px; }
+    to { background-position: 90px 180px, 170px 240px, 90px 150px; }
 }
 
 .aurora span {
     position: absolute;
     border-radius: 9999px;
     filter: blur(90px);
-    opacity: 0.5;
+    opacity: 0.6;
     will-change: transform;
 }
 
-.dark .aurora span { opacity: 0.32; }
+.dark .aurora span { opacity: 0.45; }
 
 .aurora .a1 {
-    width: 42rem; height: 42rem;
-    top: -12rem; inset-inline-start: -10rem;
-    background: radial-gradient(circle, #8b5cf6 0%, transparent 70%);
-    animation: drift 22s ease-in-out infinite;
+    width: 44rem; height: 44rem;
+    top: -14rem; inset-inline-start: -10rem;
+    background: radial-gradient(circle, #ff5fa2 0%, transparent 70%);
+    animation: drift-a 24s ease-in-out infinite;
 }
 
 .aurora .a2 {
-    width: 36rem; height: 36rem;
-    top: 20%; inset-inline-end: -12rem;
-    background: radial-gradient(circle, #22d3ee 0%, transparent 70%);
-    animation: drift 26s ease-in-out infinite reverse;
+    width: 38rem; height: 38rem;
+    top: 8%; inset-inline-end: -12rem;
+    background: radial-gradient(circle, #38e1ff 0%, transparent 70%);
+    animation: drift-b 28s ease-in-out infinite;
 }
 
 .aurora .a3 {
-    width: 40rem; height: 40rem;
-    bottom: -14rem; inset-inline-start: 25%;
-    background: radial-gradient(circle, #d946ef 0%, transparent 70%);
-    animation: drift 30s ease-in-out infinite;
+    width: 42rem; height: 42rem;
+    bottom: -16rem; inset-inline-start: 22%;
+    background: radial-gradient(circle, #8b5cf6 0%, transparent 70%);
+    animation: drift-a 32s ease-in-out infinite reverse;
 }
 
 .aurora .a4 {
     width: 26rem; height: 26rem;
-    bottom: 15%; inset-inline-end: 20%;
-    background: radial-gradient(circle, #3b82f6 0%, transparent 70%);
-    animation: drift 24s ease-in-out infinite reverse;
+    bottom: 12%; inset-inline-end: 18%;
+    background: radial-gradient(circle, #ffb03a 0%, transparent 70%);
+    animation: drift-b 26s ease-in-out infinite reverse;
 }
 
-@keyframes drift {
+.aurora .a5 {
+    width: 22rem; height: 22rem;
+    top: 38%; inset-inline-start: 38%;
+    background: radial-gradient(circle, #4ade80 0%, transparent 70%);
+    animation: drift-c 30s ease-in-out infinite;
+}
+
+.aurora .a6 {
+    width: 20rem; height: 20rem;
+    top: 4%; inset-inline-start: 55%;
+    background: radial-gradient(circle, #ffd93c 0%, transparent 70%);
+    animation: drift-c 22s ease-in-out infinite reverse;
+}
+
+@keyframes drift-a {
     0%, 100% { transform: translate(0, 0) scale(1); }
-    33% { transform: translate(4rem, 3rem) scale(1.08); }
-    66% { transform: translate(-3rem, -2rem) scale(0.94); }
+    33% { transform: translate(4rem, 3rem) scale(1.1); }
+    66% { transform: translate(-3rem, -2rem) scale(0.92); }
 }
 
-::selection { background-color: rgb(139 92 246 / 0.35); color: white; }
+@keyframes drift-b {
+    0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+    50% { transform: translate(-4rem, 4rem) scale(1.12) rotate(8deg); }
+}
 
-/* اسکرول‌بار شیشه‌ای */
+@keyframes drift-c {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(3rem, -3.5rem) scale(0.9); }
+}
+
+::selection { background-color: rgb(255 95 162 / 0.35); }
+
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, #8b5cf6, #22d3ee);
+    background: linear-gradient(180deg, #ff5fa2, #ff9a3c, #8b5cf6, #38e1ff);
     border-radius: 9999px;
     border: 2px solid transparent;
     background-clip: content-box;
 }
-::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, #7c3aed, #06b6d4); background-clip: content-box; }
 
 input[type='datetime-local']::-webkit-calendar-picker-indicator { filter: invert(0.5); cursor: pointer; }
 
 /* ============================================================
-   انیمیشن‌های ورود (Scroll Reveal)
+   انیمیشن‌های ورود و حرکت
    ============================================================ */
 [data-reveal] {
     opacity: 0;
-    transform: translateY(28px) scale(0.985);
+    transform: translateY(30px) scale(0.98);
     transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
     transition-delay: var(--reveal-delay, 0ms);
     will-change: opacity, transform;
@@ -133,23 +163,22 @@ input[type='datetime-local']::-webkit-calendar-picker-indicator { filter: invert
 
 @media (prefers-reduced-motion: reduce) {
     [data-reveal] { opacity: 1; transform: none; transition: none; }
-    .aurora span, .aurora::after, .animate-float, .animate-float-slow, .animate-pulse-glow { animation: none !important; }
+    .aurora span, .aurora::before, .animate-float, .animate-float-slow, .animate-pulse-glow, .animate-spin-slow, .twinkle { animation: none !important; }
 }
 
-/* انیمیشن‌های کلید-مقدار */
 @keyframes float-y {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-12px); }
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-14px) rotate(2deg); }
 }
 
 @keyframes pulse-glow {
-    0%, 100% { box-shadow: 0 0 0 0 rgb(139 92 246 / 0.35); }
-    50% { box-shadow: 0 0 0 14px rgb(139 92 246 / 0); }
+    0%, 100% { box-shadow: 0 0 0 0 rgb(255 95 162 / 0.4); }
+    50% { box-shadow: 0 0 0 16px rgb(255 95 162 / 0); }
 }
 
 @keyframes shine-sweep {
-    from { transform: translateX(-150%) skewX(-18deg); }
-    to { transform: translateX(250%) skewX(-18deg); }
+    from { transform: translateX(-160%) skewX(-18deg); }
+    to { transform: translateX(280%) skewX(-18deg); }
 }
 
 @keyframes gradient-x {
@@ -168,42 +197,71 @@ input[type='datetime-local']::-webkit-calendar-picker-indicator { filter: invert
 }
 
 @keyframes pop-in {
-    0% { opacity: 0; transform: translateY(10px) scale(0.94); }
+    0% { opacity: 0; transform: translateY(12px) scale(0.93); }
     100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes spin-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes twinkle {
+    0%, 100% { opacity: 0.25; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.15); }
+}
+
+@keyframes wiggle {
+    0%, 100% { transform: rotate(-4deg); }
+    50% { transform: rotate(4deg); }
 }
 
 .animate-float { animation: float-y 5s ease-in-out infinite; }
 .animate-float-slow { animation: float-y 8s ease-in-out infinite; }
 .animate-pulse-glow { animation: pulse-glow 2.6s ease-in-out infinite; }
 .animate-pop-in { animation: pop-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-spin-slow { animation: spin-slow 14s linear infinite; }
+.twinkle { animation: twinkle 2.8s ease-in-out infinite; }
+.group:hover .wiggle-hover { animation: wiggle 0.6s ease-in-out; }
 
-/* نوار متحرک (Marquee) */
+/* نوار متحرک */
 .marquee { overflow: hidden; mask-image: linear-gradient(90deg, transparent, black 12%, black 88%, transparent); }
 .marquee-track {
     display: flex;
     width: max-content;
-    gap: 3rem;
-    animation: marquee-x 26s linear infinite;
+    gap: 0.9rem;
+    padding: 0.25rem;
+    animation: marquee-x 28s linear infinite;
 }
 [dir='rtl'] .marquee-track { animation-direction: reverse; }
 .marquee:hover .marquee-track { animation-play-state: paused; }
 
-/* متن گرادیانی متحرک */
-.title-gradient {
-    @apply bg-gradient-to-l from-violet-600 via-fuchsia-500 to-cyan-500 bg-clip-text text-transparent dark:from-violet-400 dark:via-fuchsia-400 dark:to-cyan-300;
-    background-size: 220% 220%;
-    animation: gradient-x 6s ease infinite;
+.marquee-pill {
+    @apply inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-white/70 bg-white/60 px-5 py-2.5 text-sm font-black text-slate-700 shadow-glass backdrop-blur-xl;
+}
+.dark .marquee-pill {
+    @apply border-white/15 bg-white/[0.07] text-slate-200 shadow-glass-dark;
 }
 
-/* کارت با حاشیه گرادیانی متحرک (Glow Border) */
+/* متن رنگین‌کمانی متحرک */
+.title-gradient {
+    @apply bg-gradient-to-l from-pink-500 via-orange-400 via-amber-400 via-emerald-400 via-cyan-400 to-violet-500 bg-clip-text text-transparent;
+    background-size: 300% 300%;
+    animation: gradient-x 7s ease infinite;
+}
+.dark .title-gradient {
+    @apply from-pink-400 via-orange-300 via-amber-300 via-emerald-300 via-cyan-300 to-violet-400;
+}
+
+/* حاشیه رنگین‌کمانی */
 .glow-border { position: relative; }
 .glow-border::before {
     content: '';
     position: absolute;
-    inset: -1px;
+    inset: -1.5px;
     border-radius: inherit;
-    padding: 1px;
-    background: linear-gradient(135deg, rgb(139 92 246 / 0.9), rgb(217 70 239 / 0.55), rgb(34 211 238 / 0.9));
+    padding: 1.5px;
+    background: conic-gradient(from var(--glow-angle, 0deg), #ff5fa2, #ff9a3c, #ffd93c, #4ade80, #38e1ff, #8b5cf6, #ff5fa2);
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
@@ -213,33 +271,89 @@ input[type='datetime-local']::-webkit-calendar-picker-indicator { filter: invert
 }
 .glow-border:hover::before { opacity: 1; }
 
+.rainbow-ring { position: relative; }
+.rainbow-ring::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    padding: 2px;
+    background: conic-gradient(from 40deg, #ff5fa2, #ff9a3c, #ffd93c, #4ade80, #38e1ff, #8b5cf6, #ff5fa2);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+}
+
+/* ============================================================
+   آیکون‌های شیشه‌ای گرد
+   ============================================================ */
+.icon-chip {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    border-radius: 9999px;
+    color: #fff;
+    overflow: hidden;
+    isolation: isolate;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.icon-chip::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(180deg, rgb(255 255 255 / 0.55) 0%, rgb(255 255 255 / 0.08) 42%, transparent 60%);
+    pointer-events: none;
+}
+
+.icon-chip::before {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    border-radius: inherit;
+    border: 1px solid rgb(255 255 255 / 0.45);
+    pointer-events: none;
+}
+
+.group:hover .icon-chip, a:hover > .icon-chip { transform: scale(1.1) rotate(-6deg); }
+
+.chip-pink { background: linear-gradient(135deg, #ff7ab5, #f43f8e); box-shadow: var(--shadow-chip-pink); }
+.chip-orange { background: linear-gradient(135deg, #ffb03a, #fb7185); box-shadow: var(--shadow-chip-orange); }
+.chip-yellow { background: linear-gradient(135deg, #ffd93c, #ff9a3c); box-shadow: var(--shadow-chip-yellow); }
+.chip-green { background: linear-gradient(135deg, #4ade80, #14b8a6); box-shadow: var(--shadow-chip-green); }
+.chip-cyan { background: linear-gradient(135deg, #38e1ff, #4f8dff); box-shadow: var(--shadow-chip-cyan); }
+.chip-violet { background: linear-gradient(135deg, #a78bfa, #7c3aed); box-shadow: var(--shadow-chip-violet); }
+.chip-blue { background: linear-gradient(135deg, #6aa6ff, #4f46e5); box-shadow: var(--shadow-chip-blue); }
+.chip-rainbow { background: linear-gradient(135deg, #ff5fa2, #ff9a3c 35%, #8b5cf6 70%, #38e1ff); box-shadow: var(--shadow-pop); }
+
 /* ============================================================
    کامپوننت‌های Liquid Glass
    ============================================================ */
 @layer components {
     .glass {
-        @apply border border-white/60 bg-white/55 shadow-glass backdrop-blur-2xl;
+        @apply rounded-full border border-white/70 bg-white/60 shadow-glass backdrop-blur-2xl;
     }
 
     .dark .glass {
-        @apply border-white/10 bg-white/[0.06] shadow-glass-dark;
+        @apply border-white/15 bg-white/[0.08] shadow-glass-dark;
     }
 
     .glass-card {
-        @apply rounded-3xl border border-white/60 bg-white/55 shadow-glass backdrop-blur-2xl;
+        @apply rounded-[1.75rem] border border-white/70 bg-white/60 shadow-glass backdrop-blur-2xl;
     }
 
     .dark .glass-card {
         @apply border-white/10 bg-white/[0.06] shadow-glass-dark;
     }
 
-    /* کارت تعاملی: بلند شدن + درخشش */
     .lift {
-        @apply transition-all duration-300 hover:-translate-y-1.5 hover:shadow-glow;
+        @apply transition-all duration-300 hover:-translate-y-1.5 hover:shadow-pop;
     }
 
     .glass-input {
-        @apply w-full rounded-2xl border border-slate-900/10 bg-white/60 px-4 py-2.5 text-sm text-slate-800 outline-none backdrop-blur-xl transition placeholder:text-slate-400 focus:border-violet-400/70 focus:ring-4 focus:ring-violet-400/20 dark:border-white/10 dark:bg-white/[0.05] dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:ring-violet-400/10;
+        @apply w-full rounded-2xl border border-slate-900/10 bg-white/70 px-4 py-2.5 text-sm text-slate-800 outline-none backdrop-blur-xl transition placeholder:text-slate-400 focus:border-pink-400/70 focus:ring-4 focus:ring-pink-400/20 dark:border-white/10 dark:bg-white/[0.06] dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:ring-pink-400/10;
     }
 
     .glass-label {
@@ -247,14 +361,14 @@ input[type='datetime-local']::-webkit-calendar-picker-indicator { filter: invert
     }
 
     .btn {
-        @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-2xl px-5 py-2.5 text-sm font-bold transition-all duration-200 active:scale-[0.97];
+        @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-black transition-all duration-200 active:scale-[0.96];
     }
 
-    /* دکمه اصلی گرادیانی با جلوه درخشش عبوری */
     .btn-primary {
-        @apply relative inline-flex cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-l from-violet-600 via-fuchsia-600 to-violet-600 px-5 py-2.5 text-sm font-bold text-white shadow-glow transition-all duration-200 active:scale-[0.97];
-        background-size: 200% 100%;
-        animation: gradient-x 4s ease infinite;
+        @apply relative inline-flex cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-full bg-gradient-to-l from-pink-500 via-orange-400 via-violet-500 to-cyan-400 px-6 py-2.5 text-sm font-black text-white transition-all duration-200 active:scale-[0.96];
+        background-size: 220% 220%;
+        animation: gradient-x 5s ease infinite;
+        box-shadow: 0 12px 30px -8px rgb(255 95 162 / 0.65), inset 0 1px 0 rgb(255 255 255 / 0.4);
     }
 
     .btn-primary::after {
@@ -262,61 +376,58 @@ input[type='datetime-local']::-webkit-calendar-picker-indicator { filter: invert
         position: absolute;
         top: 0;
         bottom: 0;
-        width: 40%;
-        background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.35), transparent);
-        animation: shine-sweep 3.2s ease-in-out infinite;
-        animation-delay: 1s;
+        width: 38%;
+        background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.45), transparent);
+        animation: shine-sweep 3.4s ease-in-out infinite;
+        animation-delay: 1.2s;
     }
 
-    .btn-primary:hover { @apply brightness-110; }
+    .btn-primary:hover { @apply brightness-110 saturate-150; transform: translateY(-1px); }
 
     .btn-ghost {
-        @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-slate-900/10 bg-white/45 px-5 py-2.5 text-sm font-bold text-slate-700 backdrop-blur-xl transition-all duration-200 hover:bg-white/75 active:scale-[0.97] dark:border-white/10 dark:bg-white/[0.06] dark:text-slate-200 dark:hover:bg-white/10;
+        @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border border-slate-900/10 bg-white/60 px-5 py-2.5 text-sm font-black text-slate-700 backdrop-blur-xl transition-all duration-200 hover:bg-white/90 active:scale-[0.96] dark:border-white/15 dark:bg-white/[0.07] dark:text-slate-200 dark:hover:bg-white/15;
     }
 
     .btn-danger {
-        @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-2.5 text-sm font-bold text-red-600 transition-all duration-200 hover:bg-red-500/20 active:scale-[0.97] dark:text-red-400;
+        @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border border-red-500/30 bg-red-500/10 px-5 py-2.5 text-sm font-black text-red-600 transition-all duration-200 hover:bg-red-500/20 active:scale-[0.96] dark:text-red-400;
     }
 
     .btn-success {
-        @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-2xl bg-gradient-to-l from-emerald-600 to-teal-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-500/30 transition-all duration-200 hover:brightness-110 active:scale-[0.97];
+        @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-gradient-to-l from-emerald-500 to-teal-500 px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-emerald-500/30 transition-all duration-200 hover:brightness-110 active:scale-[0.96];
     }
 
     .badge {
-        @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-bold;
+        @apply inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-black;
     }
 
-    .badge-green { @apply inline-flex items-center rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-bold text-emerald-700 dark:text-emerald-400; }
-    .badge-yellow { @apply inline-flex items-center rounded-full bg-amber-500/20 px-3 py-1 text-xs font-bold text-amber-700 dark:text-amber-400; }
-    .badge-red { @apply inline-flex items-center rounded-full bg-red-500/15 px-3 py-1 text-xs font-bold text-red-700 dark:text-red-400; }
+    .badge-green { @apply inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-black text-emerald-700 dark:text-emerald-400; }
+    .badge-yellow { @apply inline-flex items-center gap-1 rounded-full bg-amber-400/25 px-3 py-1 text-xs font-black text-amber-700 dark:text-amber-300; }
+    .badge-red { @apply inline-flex items-center gap-1 rounded-full bg-red-500/15 px-3 py-1 text-xs font-black text-red-700 dark:text-red-400; }
+    .badge-pink { @apply inline-flex items-center gap-1 rounded-full bg-pink-500/15 px-3 py-1 text-xs font-black text-pink-700 dark:text-pink-300; }
+    .badge-cyan { @apply inline-flex items-center gap-1 rounded-full bg-cyan-500/15 px-3 py-1 text-xs font-black text-cyan-700 dark:text-cyan-300; }
 
     .glass-table { @apply w-full min-w-[600px] text-sm; }
-    .glass-table thead { @apply border-b border-white/40 dark:border-white/10; }
-    .glass-table th { @apply px-4 py-3 text-start text-xs font-semibold text-slate-500 dark:text-slate-400; }
+    .glass-table thead { @apply border-b border-white/60 dark:border-white/10; }
+    .glass-table th { @apply px-4 py-3 text-start text-xs font-black text-slate-500 dark:text-slate-400; }
     .glass-table tbody { @apply divide-y divide-slate-900/5 dark:divide-white/5; }
     .glass-table td { @apply px-4 py-3 text-slate-700 dark:text-slate-300; }
 
-    .section-title { @apply text-center text-2xl font-black text-slate-800 dark:text-white md:text-3xl; }
+    .section-title { @apply text-center text-2xl font-black text-slate-800 md:text-3xl dark:text-white; }
 
-    /* نشانگر نقاط متحرک کنار عنوان‌ها */
     .live-dot { position: relative; display: inline-grid; place-items: center; }
     .live-dot::before { content: ''; position: absolute; inset: 0; border-radius: 9999px; background: currentColor; animation: ping-dot 1.8s cubic-bezier(0, 0, 0.2, 1) infinite; }
     .live-dot::after { content: ''; position: relative; display: block; height: 0.5rem; width: 0.5rem; border-radius: 9999px; background: currentColor; }
 
-    /* نوار پیشرفت گرادیانی انیمیت‌شده */
-    .progress-neon {
-        @apply h-2.5 w-full overflow-hidden rounded-full bg-slate-900/10 dark:bg-white/10;
-    }
+    .progress-neon { @apply h-3 w-full overflow-hidden rounded-full bg-slate-900/10 dark:bg-white/10; }
     .progress-neon > div {
-        @apply h-full rounded-full bg-gradient-to-l from-violet-500 via-fuchsia-500 to-cyan-400 transition-all duration-700;
+        @apply h-full rounded-full transition-all duration-700;
+        background: linear-gradient(90deg, #ff5fa2, #ff9a3c, #ffd93c, #4ade80, #38e1ff, #8b5cf6);
+        background-size: 200% 100%;
+        animation: gradient-x 4s ease infinite;
     }
 
-    /* هدر شیشه‌ای هنگام اسکرول */
     .nav-shell { transition: padding 0.35s ease; }
-    .nav-shell .glass { transition: box-shadow 0.35s ease, background-color 0.35s ease; }
-    .nav-scrolled .nav-shell .glass { @apply shadow-glass; }
 
-    /* لینک‌های ناوبری با زیرخط گرادیانی */
     .nav-link { position: relative; }
     .nav-link::after {
         content: '';
@@ -324,15 +435,14 @@ input[type='datetime-local']::-webkit-calendar-picker-indicator { filter: invert
         bottom: -6px;
         right: 50%;
         transform: translateX(50%);
-        height: 2px;
+        height: 3px;
         width: 0;
         border-radius: 9999px;
-        background: linear-gradient(90deg, #8b5cf6, #22d3ee);
+        background: linear-gradient(90deg, #ff5fa2, #ff9a3c, #38e1ff);
         transition: width 0.3s ease;
     }
     .nav-link:hover::after { width: 100%; }
 
-    /* منوی موبایل */
     .mobile-menu {
         max-height: 0;
         opacity: 0;
@@ -340,5 +450,5 @@ input[type='datetime-local']::-webkit-calendar-picker-indicator { filter: invert
         transform: translateY(-8px);
         transition: max-height 0.45s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease, transform 0.35s ease;
     }
-    .mobile-menu.open { max-height: 32rem; opacity: 1; transform: translateY(0); }
+    .mobile-menu.open { max-height: 34rem; opacity: 1; transform: translateY(0); }
 }

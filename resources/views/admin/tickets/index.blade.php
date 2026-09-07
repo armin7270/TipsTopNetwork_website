@@ -12,9 +12,9 @@
 </div>
 
 <div class="mt-4 flex flex-wrap gap-2 text-sm font-bold">
-    <a href="{{ route('admin.tickets.index') }}" class="glass-card px-4 py-2 {{ $status === '' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400' }}">{{ __('همه') }}</a>
+    <a href="{{ route('admin.tickets.index') }}" class="glass-card px-4 py-2 {{ $status === '' ? 'text-pink-600 dark:text-pink-400' : 'text-slate-500 dark:text-slate-400' }}">{{ __('همه') }}</a>
     @foreach (\App\Models\Ticket::STATUSES as $value => $label)
-        <a href="{{ route('admin.tickets.index', ['status' => $value]) }}" class="glass-card px-4 py-2 {{ $status === $value ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400' }}">{{ $label }}</a>
+        <a href="{{ route('admin.tickets.index', ['status' => $value]) }}" class="glass-card px-4 py-2 {{ $status === $value ? 'text-pink-600 dark:text-pink-400' : 'text-slate-500 dark:text-slate-400' }}">{{ $label }}</a>
     @endforeach
 </div>
 

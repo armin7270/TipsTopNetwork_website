@@ -30,8 +30,8 @@
 <div class="mx-auto flex max-w-7xl">
     <aside class="glass sticky top-4 mx-4 my-4 hidden h-[calc(100vh-2rem)] w-60 shrink-0 rounded-3xl p-4 md:block">
         <a href="{{ route('home') }}" class="mb-6 flex items-center gap-2">
-            <span class="grid h-9 w-9 place-items-center rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-600 text-white shadow-glow">
-                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            <span class="icon-chip chip-rainbow h-9 w-9">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
             </span>
             <span class="font-black text-slate-800 dark:text-white">{{ $siteName }}</span>
         </a>
@@ -54,7 +54,7 @@
         <nav class="space-y-1 text-sm font-medium">
             @php
                 $me = auth()->user();
-                $navActive = 'bg-gradient-to-l from-violet-500/15 to-fuchsia-500/15 font-bold text-violet-600 dark:text-violet-400';
+                $navActive = 'bg-gradient-to-l from-pink-500/15 via-orange-400/10 to-violet-500/15 font-black text-pink-600 dark:text-pink-400';
                 $navIdle = 'text-slate-600 hover:bg-white/40 dark:text-slate-300 dark:hover:bg-white/5';
             @endphp
             <a href="{{ route('admin.dashboard') }}" class="block rounded-2xl px-4 py-2.5 transition {{ $current === 'dashboard' ? $navActive : $navIdle }}">📊 {{ __('داشبورد') }}</a>

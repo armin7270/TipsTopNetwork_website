@@ -10,6 +10,10 @@ use App\Models\Server;
 use App\Models\Setting;
 use App\Models\Ticket;
 use App\Models\Transaction;
+use App\Services\AdminLog;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\View\View;
 
 /**
@@ -81,6 +85,22 @@ class SetupController extends Controller
             'doneCount' => $doneCount,
             'totalCount' => count($steps),
             'complete' => $doneCount === count($steps),
+            'storageLinked' => is_link(public_path('storage')) || is_dir(public_path('storage')),
         ]);
+    }
+
+    /**
+     * ساخت لینک public/storage (برای هاست‌هایی که SSH ندارند)
+     */
+    public function linkStorage(Request $request): RedirectResponse
+    {
+        try {
+            Artisan::call('storage:link');
+            AdminLog::record($request->user(), 'settings_updated', null, 'storage:link');
+
+            return back()->with('success', __('لینک storage ساخته شد. ✅'));
+        } catch (\Throwable $e) {
+            return back()->with('error', __('ساخت لینک ناموفق بود: :msg', ['msg' => $e->getMessage()]));
+        }
     }
 }

@@ -13,9 +13,9 @@
 </form>
 
 <div class="glass-card mt-4 inline-flex flex-wrap gap-2 p-2 text-sm">
-    <a href="{{ route('admin.orders.index') }}" class="rounded-xl px-4 py-1.5 transition {{ !$status ? 'bg-indigo-500/15 font-bold text-indigo-600 dark:text-indigo-400' : 'text-slate-500 hover:bg-white/40 dark:text-slate-400 dark:hover:bg-white/5' }}">{{ __('همه') }}</a>
+    <a href="{{ route('admin.orders.index') }}" class="rounded-xl px-4 py-1.5 transition {{ !$status ? 'bg-pink-500/15 font-bold text-pink-600 dark:text-pink-400' : 'text-slate-500 hover:bg-white/40 dark:text-slate-400 dark:hover:bg-white/5' }}">{{ __('همه') }}</a>
     @foreach ($statuses as $key => $label)
-        <a href="{{ route('admin.orders.index', ['status' => $key]) }}" class="rounded-xl px-4 py-1.5 transition {{ $status === $key ? 'bg-indigo-500/15 font-bold text-indigo-600 dark:text-indigo-400' : 'text-slate-500 hover:bg-white/40 dark:text-slate-400 dark:hover:bg-white/5' }}">{{ __($label) }}</a>
+        <a href="{{ route('admin.orders.index', ['status' => $key]) }}" class="rounded-xl px-4 py-1.5 transition {{ $status === $key ? 'bg-pink-500/15 font-bold text-pink-600 dark:text-pink-400' : 'text-slate-500 hover:bg-white/40 dark:text-slate-400 dark:hover:bg-white/5' }}">{{ __($label) }}</a>
     @endforeach
 </div>
 

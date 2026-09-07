@@ -21,6 +21,23 @@
     @endif
 </div>
 
+<div class="glass-card mt-6 p-6">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+            <div class="font-black text-slate-800 dark:text-white">🔗 {{ __('لینک فایل‌های عمومی (storage)') }}</div>
+            <div class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{{ __('برای نمایش رسیدها و فایل‌های پیوست لازم است. اگر روی هاست SSH ندارید، از اینجا بسازید.') }}</div>
+        </div>
+        @if ($storageLinked)
+            <span class="badge-green">{{ __('متصل است') }}</span>
+        @else
+            <form method="POST" action="{{ route('admin.setup.link-storage') }}">
+                @csrf
+                <button class="btn-primary text-xs">{{ __('ساخت لینک storage') }}</button>
+            </form>
+        @endif
+    </div>
+</div>
+
 <div class="mt-5 space-y-3">
     @foreach ($steps as $step)
         <div class="glass-card flex flex-wrap items-center gap-4 p-5 {{ $step['done'] ? 'opacity-90' : 'glow-border' }}">

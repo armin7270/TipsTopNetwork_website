@@ -7,34 +7,34 @@
 
 {{-- دسترسی سریع: کیف پول، دعوت، تیکت، نوتیفیکیشن، اکانت تست --}}
 <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-    <a data-reveal href="{{ route('wallet.index') }}" class="glass-card lift glow-border p-5" data-spotlight>
-        <div class="text-xs text-slate-400">💳 {{ __('کیف پول') }}</div>
-        <div class="mt-1 text-xl font-black text-emerald-600 dark:text-emerald-400">{{ number_format(auth()->user()->balance) }} <span class="text-xs font-medium text-slate-400">{{ __('تومان') }}</span></div>
-        <div class="mt-2 text-xs font-bold text-violet-600 dark:text-violet-400">{{ __('شارژ / تراکنش‌ها') }} ←</div>
+    <a data-reveal href="{{ route('wallet.index') }}" class="glass-card lift glow-border group p-5" data-spotlight>
+        <div class="flex items-center gap-2.5 text-xs font-black text-slate-400"><span class="icon-chip chip-green h-9 w-9 text-base">👛</span>{{ __('کیف پول') }}</div>
+        <div class="mt-2 text-xl font-black text-emerald-600 dark:text-emerald-400">{{ number_format(auth()->user()->balance) }} <span class="text-xs font-medium text-slate-400">{{ __('تومان') }}</span></div>
+        <div class="mt-2 text-xs font-black text-pink-600 dark:text-pink-400">{{ __('شارژ / تراکنش‌ها') }} ←</div>
     </a>
-    <a data-reveal style="--reveal-delay: 80ms" href="{{ route('referrals.index') }}" class="glass-card lift glow-border p-5" data-spotlight>
-        <div class="text-xs text-slate-400">🎁 {{ __('دعوت از دوستان') }}</div>
-        <div class="mt-1 text-sm font-bold text-slate-800 dark:text-white">{{ __('پاداش نقدی بگیرید!') }}</div>
-        <div class="mt-2 text-xs font-bold text-violet-600 dark:text-violet-400">{{ __('لینک معرفی شما') }} ←</div>
+    <a data-reveal style="--reveal-delay: 80ms" href="{{ route('referrals.index') }}" class="glass-card lift glow-border group p-5" data-spotlight>
+        <div class="flex items-center gap-2.5 text-xs font-black text-slate-400"><span class="icon-chip chip-pink h-9 w-9 text-base">🎁</span>{{ __('دعوت از دوستان') }}</div>
+        <div class="mt-2 text-sm font-black text-slate-800 dark:text-white">{{ __('پاداش نقدی بگیرید!') }}</div>
+        <div class="mt-2 text-xs font-black text-pink-600 dark:text-pink-400">{{ __('لینک معرفی شما') }} ←</div>
     </a>
-    <a data-reveal style="--reveal-delay: 160ms" href="{{ route('notifications.index') }}" class="glass-card lift glow-border p-5" data-spotlight>
-        <div class="text-xs text-slate-400">🔔 {{ __('نوتیفیکیشن‌ها') }}</div>
-        <div class="mt-1 text-sm font-bold text-slate-800 dark:text-white">
+    <a data-reveal style="--reveal-delay: 160ms" href="{{ route('notifications.index') }}" class="glass-card lift glow-border group p-5" data-spotlight>
+        <div class="flex items-center gap-2.5 text-xs font-black text-slate-400"><span class="icon-chip chip-yellow h-9 w-9 text-base">🔔</span>{{ __('نوتیفیکیشن‌ها') }}</div>
+        <div class="mt-2 text-sm font-black text-slate-800 dark:text-white">
             {{ auth()->user()->notifications()->unread()->count() ? auth()->user()->notifications()->unread()->count().' '.__('خوانده‌نشده') : __('همه خوانده شده') }}
         </div>
-        <div class="mt-2 text-xs font-bold text-violet-600 dark:text-violet-400">{{ __('مشاهده') }} ←</div>
+        <div class="mt-2 text-xs font-black text-pink-600 dark:text-pink-400">{{ __('مشاهده') }} ←</div>
     </a>
     @if (\App\Models\Setting::get('trial_enabled', '0') === '1' && auth()->user()->trial_accounts_taken < max(1, (int) \App\Models\Setting::get('trial_limit_per_user', 1)))
-        <a data-reveal style="--reveal-delay: 240ms" href="{{ route('trial.index') }}" class="glass-card lift glow-border p-5" data-spotlight>
-            <div class="text-xs text-slate-400">🧪 {{ __('اکانت تست') }}</div>
-            <div class="mt-1 text-sm font-bold text-slate-800 dark:text-white">{{ __('هنوز دریافت نکرده‌اید!') }}</div>
-            <div class="mt-2 text-xs font-bold text-violet-600 dark:text-violet-400">{{ __('دریافت رایگان') }} ←</div>
+        <a data-reveal style="--reveal-delay: 240ms" href="{{ route('trial.index') }}" class="glass-card lift glow-border group p-5" data-spotlight>
+            <div class="flex items-center gap-2.5 text-xs font-black text-slate-400"><span class="icon-chip chip-cyan h-9 w-9 text-base">🧪</span>{{ __('اکانت تست') }}</div>
+            <div class="mt-2 text-sm font-black text-slate-800 dark:text-white">{{ __('هنوز دریافت نکرده‌اید!') }}</div>
+            <div class="mt-2 text-xs font-black text-pink-600 dark:text-pink-400">{{ __('دریافت رایگان') }} ←</div>
         </a>
     @else
-        <a data-reveal style="--reveal-delay: 240ms" href="{{ route('tickets.create') }}" class="glass-card lift glow-border p-5" data-spotlight>
-            <div class="text-xs text-slate-400">🎧 {{ __('پشتیبانی') }}</div>
-            <div class="mt-1 text-sm font-bold text-slate-800 dark:text-white">{{ __('سوال یا مشکل دارید؟') }}</div>
-            <div class="mt-2 text-xs font-bold text-violet-600 dark:text-violet-400">{{ __('ثبت تیکت') }} ←</div>
+        <a data-reveal style="--reveal-delay: 240ms" href="{{ route('tickets.create') }}" class="glass-card lift glow-border group p-5" data-spotlight>
+            <div class="flex items-center gap-2.5 text-xs font-black text-slate-400"><span class="icon-chip chip-violet h-9 w-9 text-base">🎧</span>{{ __('پشتیبانی') }}</div>
+            <div class="mt-2 text-sm font-black text-slate-800 dark:text-white">{{ __('سوال یا مشکل دارید؟') }}</div>
+            <div class="mt-2 text-xs font-black text-pink-600 dark:text-pink-400">{{ __('ثبت تیکت') }} ←</div>
         </a>
     @endif
 </div>

@@ -1,6 +1,91 @@
 # راهنمای دیپلوی (استقرار) وبسایت TipStop Network
 
-این پروژه یک اپلیکیشن **Laravel 13 + Tailwind 4 + SQLite** است و روی **Railway** و **Vercel** قابل استقرار است.
+این پروژه یک اپلیکیشن **Laravel 13 + Tailwind 4** است و روی **InfinityFree (رایگان دائمی)**، **Railway** و **Vercel** قابل استقرار است.
+
+## 🏆 مقایسه سریع گزینه‌ها
+
+| گزینه | هزینه | همیشه روشن؟ | دیتابیس | صف/کرون | مناسب |
+|---|---|---|---|---|---|
+| **InfinityFree** ✅ پیشنهادی | کاملاً رایگان، بدون کارت | بله (بدون sleep) | MySQL رایگان | با ترفند کرون URL | سایت واقعی دائمی و رایگان |
+| Railway | کردیت ماهانه محدود | بله تا تمام شدن کردیت | دارد | دارد | تست و شروع سریع |
+| Vercel | رایگان (محدودیت serverless) | بله | خارجی لازم است | ندارد | دمو (پیشنهاد نمی‌شود) |
+| Oracle Always Free | رایگان دائمی | بله | دارد | کامل | حرفه‌ای‌ها (نیاز به سرور لینوکسی) |
+
+---
+
+## 🆓 استقرار دائمی رایگان روی InfinityFree (قدم‌به‌قدم)
+
+> بدون کارت بانکی، بدون خاموش شدن، با SSL رایگان و دامنه دلخواه. سایت شما مثل یک سایت واقعی ۲۴ ساعته آنلاین می‌ماند.
+
+### ۱) ساخت حساب و دامنه
+1. در [infinityfree.com](https://infinityfree.com) ثبت‌نام کنید (فقط ایمیل).
+2. یک **Hosting Account** بسازید و یک دامنه انتخاب کنید (ساب‌دامین رایگان مثل `tipstop.infinityfreeapp.com` یا دامنه خودتان).
+3. از کنترل‌پنل، **Free SSL Certificates** را فعال کنید تا `https` داشته باشید.
+
+### ۲) ساخت دیتابیس MySQL
+1. در کنترل‌پنل → **MySQL Databases** یک دیتابیس بسازید.
+2. مقادیر **Host / Name / Username / Password** را یادداشت کنید.
+
+### ۳) آماده‌سازی فایل‌ها روی کامپیوتر
+```sh
+npm run build
+composer install --no-dev --optimize-autoloader
+```
+فایل `.env` روی هاست را طبق نمونه زیر بسازید (فایل `.env` لوکال را آپلود نکنید!):
+```env
+APP_NAME="TipStop Network"
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://YOUR-DOMAIN
+APP_KEY=base64:... (با php artisan key:generate --show بسازید)
+APP_LOCALE=fa
+
+DB_CONNECTION=mysql
+DB_HOST=sqlXXX.infinityfree.com
+DB_PORT=3306
+DB_DATABASE=xxx_tipstop
+DB_USERNAME=xxx_user
+DB_PASSWORD=xxx_pass
+
+SESSION_DRIVER=database
+CACHE_STORE=database
+QUEUE_CONNECTION=database
+
+DEPLOY_KEY=یک-رشته-تصادفی-طولانی-و-محرمانه
+ADMIN_PASSWORD=admin
+```
+
+### ۴) آپلود با FTP
+1. با FileZilla به هاست وصل شوید و **همه فایل‌های پروژه** را در `htdocs` آپلود کنید، **به‌جز**: `node_modules` ،`.git`.
+2. `vendor/` و `public/build/` حتماً آپلود شوند (روی هاست کامپایل نمی‌شوند).
+3. دامنه را طوری تنظیم کنید که به پوشه `public` اشاره کند (Addon Domain → Document Root = `htdocs/public`). اگر نشد، فایل `.htaccess` ریشه پروژه (از قبل آماده است) درخواست‌ها را به `public/` می‌فرستد.
+
+### ۵) اجرای مایگریشن بدون SSH (یک‌بار)
+در مرورگر باز کنید (به‌جای `KEY` مقدار `DEPLOY_KEY` خودتان):
+```
+https://YOUR-DOMAIN/deploy/migrate?key=KEY
+```
+باید `{"ok":true,...}` ببینید. این کار جداول را می‌سازد، اکانت `admin/admin` را سید می‌کند و لینک storage را می‌سازد. **بعد از آن وارد سایت شوید و فوراً رمز admin را عوض کنید.**
+
+### ۶) فعال‌سازی کرون و صف (خیلی مهم!)
+هاست رایگان کرون ندارد؛ از سرویس رایگان [cron-job.org](https://cron-job.org) استفاده کنید:
+1. حساب بسازید و یک Cronjob جدید با آدرس زیر و **هر ۵ دقیقه یک‌بار** بسازید:
+```
+https://YOUR-DOMAIN/deploy/cron?key=KEY
+```
+2. این آدرس زمان‌بند لاراول (انقضای خودکار، سینک ترافیک، یادآوری، هلث‌چک، بکاپ) و صف (برودکست تلگرام) را اجرا می‌کند.
+
+### ۷) وبهوک تلگرام
+```
+php artisan telegram:set-webhook  → روی لوکال با APP_URL هاست اجرا کنید
+```
+یا توکن را در تنظیمات وارد کنید و آدرس `https://YOUR-DOMAIN/telegram/webhook` را ست کنید.
+
+### ⚠️ محدودیت‌های InfinityFree (صادقانه)
+- سقف حدود ۳۰هزار بازدید روزانه و ۵GB فضا — برای شروع عالی است، برای ترافیک سنگین باید هاست پولی بگیرید.
+- ارسال ایمیل (SMTP) بسته است — اعلان‌ها با تلگرام و پیامک انجام می‌شود (از قبل پشتیبانی شده).
+- SSH و کامپایل روی هاست نیست — همه بیلدها را لوکال انجام و آپلود کنید.
+- اتصال خروجی به سرور 3x-ui شما با HTTPS انجام می‌شود؛ بعد از بالا آمدن حتماً «تست اتصال» سرور را در پنل بزنید.
 
 ---
 
