@@ -41,6 +41,16 @@
                     </span>
                 </label>
 
+                @if ($onlineEnabled)
+                    <label class="glass-card glow-border flex cursor-pointer items-center gap-4 p-4 transition hover:scale-[1.01] has-[:checked]:ring-2 has-[:checked]:ring-indigo-400/50">
+                        <input type="radio" name="payment_method" value="online" class="h-4 w-4 text-indigo-600">
+                        <span class="flex-1">
+                            <span class="block font-bold text-slate-800 dark:text-white">⚡ {{ __('پرداخت آنلاین') }} <span class="badge-green">{{ __('فعال‌سازی آنی') }}</span></span>
+                            <span class="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">{{ __('پرداخت با کارت بانکی در درگاه امن + فعال‌سازی خودکار، بدون انتظار') }}</span>
+                        </span>
+                    </label>
+                @endif
+
                 <div class="flex gap-3 pt-2">
                     <a href="{{ route('home') }}#plans" class="btn-ghost flex-1">{{ __('انصراف') }}</a>
                     <button class="btn-primary flex-[2]">{{ __('ادامه و پرداخت') }}</button>

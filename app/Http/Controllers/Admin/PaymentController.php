@@ -5,23 +5,45 @@ namespace App\Http\Controllers\Admin;
 use App\Events\OrderPaid;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Services\AdminLog;
 use App\Services\NotificationService;
 use App\Services\Vpn\ProvisioningService;
+use App\Support\CsvExport;
+use App\Support\Format;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PaymentController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View|StreamedResponse
     {
-        $orders = Order::query()
+        $q = trim((string) $request->query('q', ''));
+
+        $query = Order::query()
             ->where('status', Order::STATUS_AWAITING_VERIFICATION)
             ->with(['user', 'plan'])
             ->latest('paid_at')
-            ->paginate(20);
+            ->when($q, fn ($query) => $query->where(fn ($w) => $w
+                ->where('id', $q)
+                ->orWhere('bank_reference', 'like', "%{$q}%")
+                ->orWhereHas('user', fn ($u) => $u
+                    ->where('name', 'like', "%{$q}%")
+                    ->orWhere('phone', 'like', "%{$q}%"))));
 
-        return view('admin.payments', ['orders' => $orders]);
+        if ($request->query('export') === 'csv') {
+            return CsvExport::download('payments-'.now()->format('Ymd-Hi').'.csv',
+                ['شناسه', 'کاربر', 'موبایل', 'پلن', 'مبلغ پرداختی', 'کد پیگیری', 'زمان پرداخت'],
+                $query->cursor()->map(fn (Order $o) => [
+                    $o->id, $o->user?->name, $o->user?->phone, $o->plan_name,
+                    $o->paid_amount, $o->bank_reference, Format::date($o->paid_at),
+                ])->all());
+        }
+
+        $orders = $query->paginate(20)->withQueryString();
+
+        return view('admin.payments', ['orders' => $orders, 'q' => $q]);
     }
 
     public function approve(Request $request, Order $order, ProvisioningService $provisioning): RedirectResponse
@@ -57,6 +79,8 @@ class PaymentController extends Controller
 
         event(new OrderPaid($order));
 
+        AdminLog::record($request->user(), 'payment_approved', $order, number_format($order->price_toman).' تومان');
+
         return back()->with('success', __('سفارش #:id تایید شد و کانفیگ در پنل ساخته شد. ✅', ['id' => $order->id]));
     }
 
@@ -86,6 +110,8 @@ class PaymentController extends Controller
             __('دلیل: :note', ['note' => $validated['note']]),
             route('orders.show', $order),
         );
+
+        AdminLog::record($request->user(), 'payment_rejected', $order, $validated['note']);
 
         return back()->with('success', __('پرداخت سفارش #:id رد شد.', ['id' => $order->id]));
     }

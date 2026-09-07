@@ -8,6 +8,12 @@
     <span class="badge-yellow">{{ $orders->total() }} {{ __('مورد در انتظار') }}</span>
 </div>
 
+<form method="GET" action="{{ route('admin.payments.index') }}" class="glass-card mt-4 flex flex-wrap gap-2 p-3">
+    <input type="text" name="q" value="{{ $q }}" placeholder="{{ __('جستجو: شناسه، نام/موبایل، کد پیگیری...') }}" class="glass-input flex-1">
+    <button class="btn-ghost">{{ __('جستجو') }}</button>
+    <a href="{{ route('admin.payments.index', array_filter(['q' => $q, 'export' => 'csv'])) }}" class="btn-ghost">📥 {{ __('خروجی CSV') }}</a>
+</form>
+
 <div class="mt-6 space-y-4">
     @forelse ($orders as $order)
         <div class="glass-card p-6">

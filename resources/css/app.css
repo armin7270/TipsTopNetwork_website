@@ -1,5 +1,5 @@
 @import 'tailwindcss';
-@import 'vazirmatn/Vazirmatn-font-face.css';
+@import 'vazirmatn/Vazirmatn-Variable-font-face.css';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Events\OrderPaid;
 use App\Models\Order;
 use App\Models\Plan;
+use App\Models\Setting;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Services\Vpn\ProvisioningService;
@@ -79,26 +80,52 @@ class OrderService
                 'paid_at' => now(),
             ]);
 
-            // فعال‌سازی سرویس در پنل (تمدید یا ساخت جدید)
-            if ($order->isRenewal()) {
-                $this->provisioning->extend($order);
-            } else {
-                $this->provisioning->provision($order);
-            }
-
-            $order->refresh();
-
-            NotificationService::send(
-                $order->user,
-                'order_paid',
-                $order->isRenewal() ? __('سرویس شما تمدید شد ✅') : __('سرویس شما فعال شد ✅'),
-                __('پلن «:plan» با کسر از کیف پول فعال شد.', ['plan' => $order->plan_name]),
-                route('orders.show', $order),
-            );
-
-            event(new OrderPaid($order));
-
-            return $order;
+            return $this->activatePaidOrder($order);
         });
+    }
+
+    /**
+     * فعال‌سازی سفارش پرداخت‌شده (ساخت/تمدید کانفیگ + اطلاع + رویداد)
+     * باید داخل تراکنش دیتابیس صدا زده شود. Idempotent است: سفارش فعال دوباره فعال نمی‌شود.
+     */
+    public function activatePaidOrder(Order $order): Order
+    {
+        $order->refresh();
+
+        if ($order->status === Order::STATUS_ACTIVE) {
+            return $order;
+        }
+
+        // فعال‌سازی سرویس در پنل (تمدید یا ساخت جدید)
+        if ($order->isRenewal()) {
+            $this->provisioning->extend($order);
+        } else {
+            $this->provisioning->provision($order);
+        }
+
+        $order->refresh();
+
+        NotificationService::send(
+            $order->user,
+            'order_paid',
+            $order->isRenewal() ? __('سرویس شما تمدید شد ✅') : __('سرویس شما فعال شد ✅'),
+            __('پلن «:plan» فعال شد. لینک اشتراک در داشبورد موجود است.', ['plan' => $order->plan_name]),
+            route('orders.show', $order),
+        );
+
+        // پیامک تایید برای کاربرانی که تلگرام ندارند
+        if (! $order->user->telegram_chat_id) {
+            SmsService::send(
+                $order->user->phone,
+                __(':site: سرویس :plan شما فعال شد. لینک اشتراک در داشبورد سایت موجود است.', [
+                    'site' => Setting::get('site_name', 'TipStop'),
+                    'plan' => $order->plan_name,
+                ])
+            );
+        }
+
+        event(new OrderPaid($order));
+
+        return $order;
     }
 }

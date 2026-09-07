@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="description" content="@yield('meta_description', __('خرید اشتراک VPN پرسرعت V2Ray با تحویل خودکار — VLESS، VMess و Trojan روی سرورهای اختصاصی.'))">
+    <meta property="og:title" content="@yield('title', __('کانفیگ پرسرعت')) | {{ $siteName }}">
+    <meta property="og:description" content="@yield('meta_description', __('اینترنت آزاد و بدون فیلتر با تحویل آنی.'))">
+    <meta property="og:type" content="website">
+    <meta name="theme-color" content="#7c3aed">
     <title>@yield('title', __('کانفیگ پرسرعت')) | {{ $siteName }}</title>
 
     <script>
@@ -45,6 +50,7 @@
                 <a class="nav-link transition hover:text-violet-600 dark:hover:text-violet-400" href="{{ route('dashboard') }}">{{ __('داشبورد') }}</a>
                 <a class="nav-link transition hover:text-violet-600 dark:hover:text-violet-400" href="{{ route('wallet.index') }}">{{ __('کیف پول') }}</a>
                 <a class="nav-link transition hover:text-violet-600 dark:hover:text-violet-400" href="{{ route('tickets.index') }}">{{ __('پشتیبانی') }}</a>
+                <a class="nav-link transition hover:text-violet-600 dark:hover:text-violet-400" href="{{ route('profile.edit') }}">{{ __('پروفایل') }}</a>
                 @if (auth()->user()->isAdmin())
                     <a class="flex items-center gap-1.5 font-bold text-fuchsia-600 transition hover:text-fuchsia-500 dark:text-fuchsia-400" href="{{ route('admin.dashboard') }}">
                         <span class="live-dot text-fuchsia-500"></span>{{ __('پنل مدیریت') }}
@@ -93,6 +99,7 @@
                     <a class="rounded-2xl px-4 py-3 transition hover:bg-violet-500/10" href="{{ route('orders.index') }}">📦 {{ __('سفارش‌ها') }}</a>
                     <a class="rounded-2xl px-4 py-3 transition hover:bg-violet-500/10" href="{{ route('wallet.index') }}">👛 {{ __('کیف پول') }}</a>
                     <a class="rounded-2xl px-4 py-3 transition hover:bg-violet-500/10" href="{{ route('tickets.index') }}">🎧 {{ __('پشتیبانی') }}</a>
+                    <a class="rounded-2xl px-4 py-3 transition hover:bg-violet-500/10" href="{{ route('profile.edit') }}">👤 {{ __('پروفایل') }}</a>
                     @if (auth()->user()->isAdmin())
                         <a class="rounded-2xl px-4 py-3 font-bold text-fuchsia-600 transition hover:bg-fuchsia-500/10 dark:text-fuchsia-400" href="{{ route('admin.dashboard') }}">⚡ {{ __('پنل مدیریت') }}</a>
                     @endif

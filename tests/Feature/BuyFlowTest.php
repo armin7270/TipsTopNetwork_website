@@ -39,6 +39,7 @@ class BuyFlowTest extends TestCase
             'name' => 'مدیر',
             'phone' => '09120000000',
             'password' => 'Admin@1234',
+            'password_changed_at' => now(),
             'status' => 'active',
             'is_admin' => true,
         ]);

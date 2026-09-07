@@ -18,6 +18,12 @@
     @endforeach
 </div>
 
+<form method="GET" action="{{ route('admin.tickets.index') }}" class="glass-card mt-4 flex flex-wrap gap-2 p-3">
+    @if ($status)<input type="hidden" name="status" value="{{ $status }}">@endif
+    <input type="text" name="q" value="{{ $q }}" placeholder="{{ __('جستجو: شناسه، موضوع، نام/موبایل کاربر...') }}" class="glass-input flex-1">
+    <button class="btn-ghost">{{ __('جستجو') }}</button>
+</form>
+
 <div class="glass-card mt-4 overflow-x-auto p-2">
     <table class="glass-table">
         <thead>

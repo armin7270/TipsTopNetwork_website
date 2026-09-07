@@ -15,13 +15,16 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // کاربر مدیر (اطلاعات ورود را بعد از اولین ورود از منوی مدیریت تغییر دهید)
+        // password_changed_at خالی = اجبار تعویض رمز در اولین ورود
         User::firstOrCreate(
             ['username' => 'admin'],
             [
                 'name' => 'مدیر سایت',
                 'phone' => env('ADMIN_PHONE', '09120000000'),
                 'password' => env('ADMIN_PASSWORD', 'admin'),
+                'password_changed_at' => null,
                 'is_admin' => true,
+                'admin_role' => 'super',
                 'status' => 'active',
             ]
         );

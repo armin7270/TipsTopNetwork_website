@@ -6,7 +6,9 @@ use App\Http\Controllers\BuyController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\OnlinePaymentController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReferralController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\Telegram\WebhookController;
@@ -23,6 +25,10 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
+Route::get('/sitemap.xml', function () {
+    return response()->view('sitemap')->header('Content-Type', 'application/xml');
+})->name('sitemap');
+
 // تغییر زبان (فارسی/انگلیسی)
 Route::get('/lang/{locale}', function (string $locale) {
     abort_unless(in_array($locale, ['fa', 'en'], true), 400);
@@ -35,9 +41,9 @@ Route::get('/lang/{locale}', function (string $locale) {
 // احراز هویت
 Route::middleware('guest')->group(function () {
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
-    Route::post('/register', [AuthController::class, 'register']);
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
+    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:register');
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
@@ -60,9 +66,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/buy/{plan}', [BuyController::class, 'show'])->name('buy');
     Route::post('/buy/{plan}', [BuyController::class, 'store'])->name('buy.store');
 
+    // بازگشت از درگاه پرداخت آنلاین
+    Route::get('/payment/callback', [OnlinePaymentController::class, 'callback'])->name('payment.callback');
+
     // کیف پول
     Route::get('/wallet', [WalletController::class, 'index'])->name('wallet.index');
     Route::post('/wallet/charge', [WalletController::class, 'charge'])->name('wallet.charge');
+    Route::post('/wallet/charge-crypto', [WalletController::class, 'chargeCrypto'])->name('wallet.charge-crypto');
     Route::get('/wallet/deposit/{transaction}', [WalletController::class, 'deposit'])->name('wallet.deposit');
     Route::post('/wallet/deposit/{transaction}/receipt', [WalletController::class, 'submitDepositReceipt'])->name('wallet.deposit.receipt');
 
@@ -86,6 +96,13 @@ Route::middleware('auth')->group(function () {
     // اکانت تست
     Route::get('/trial', [TrialController::class, 'index'])->name('trial.index');
     Route::post('/trial', [TrialController::class, 'request'])->name('trial.request');
+
+    // پروفایل کاربری
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/profile/password', [ProfileController::class, 'showPasswordForm'])->name('profile.password');
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
 // وبهوک ربات تلگرام
@@ -134,60 +151,63 @@ Route::post('/webhooks/nowpayments', function (Request $request) {
     return response()->json(['ok' => true]);
 })->name('webhooks.nowpayments')->withoutMiddleware([VerifyCsrfToken::class]);
 
-// پنل مدیریت
+// پنل مدیریت (دسترسی بخش‌بندی‌شده بر اساس نقش: super / finance / support)
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/', [Admin\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/setup', [Admin\SetupController::class, 'index'])->middleware('admin.section:super')->name('setup');
+    Route::get('/activity-logs', [Admin\ActivityLogController::class, 'index'])->middleware('admin.section:super')->name('activity-logs.index');
 
     // پرداخت‌ها (صف تایید کارت به کارت)
-    Route::get('/payments', [Admin\PaymentController::class, 'index'])->name('payments.index');
-    Route::post('/payments/{order}/approve', [Admin\PaymentController::class, 'approve'])->name('payments.approve');
-    Route::post('/payments/{order}/reject', [Admin\PaymentController::class, 'reject'])->name('payments.reject');
+    Route::get('/payments', [Admin\PaymentController::class, 'index'])->middleware('admin.section:finance')->name('payments.index');
+    Route::post('/payments/{order}/approve', [Admin\PaymentController::class, 'approve'])->middleware('admin.section:finance')->name('payments.approve');
+    Route::post('/payments/{order}/reject', [Admin\PaymentController::class, 'reject'])->middleware('admin.section:finance')->name('payments.reject');
 
     // سفارش‌ها
-    Route::get('/orders', [Admin\OrderController::class, 'index'])->name('orders.index');
-    Route::get('/orders/{order}', [Admin\OrderController::class, 'show'])->name('orders.show');
-    Route::delete('/orders/{order}', [Admin\OrderController::class, 'destroy'])->name('orders.destroy');
+    Route::get('/orders', [Admin\OrderController::class, 'index'])->middleware('admin.section:finance')->name('orders.index');
+    Route::get('/orders/{order}', [Admin\OrderController::class, 'show'])->middleware('admin.section:finance')->name('orders.show');
+    Route::delete('/orders/{order}', [Admin\OrderController::class, 'destroy'])->middleware('admin.section:super')->name('orders.destroy');
 
     // شارژهای کیف پول
-    Route::get('/wallet-deposits', [Admin\WalletDepositController::class, 'index'])->name('wallet-deposits.index');
-    Route::post('/wallet-deposits/{transaction}/approve', [Admin\WalletDepositController::class, 'approve'])->name('wallet-deposits.approve');
-    Route::post('/wallet-deposits/{transaction}/reject', [Admin\WalletDepositController::class, 'reject'])->name('wallet-deposits.reject');
+    Route::get('/wallet-deposits', [Admin\WalletDepositController::class, 'index'])->middleware('admin.section:finance')->name('wallet-deposits.index');
+    Route::post('/wallet-deposits/{transaction}/approve', [Admin\WalletDepositController::class, 'approve'])->middleware('admin.section:finance')->name('wallet-deposits.approve');
+    Route::post('/wallet-deposits/{transaction}/reject', [Admin\WalletDepositController::class, 'reject'])->middleware('admin.section:finance')->name('wallet-deposits.reject');
 
     // تیکت‌ها
-    Route::get('/tickets', [Admin\TicketController::class, 'index'])->name('tickets.index');
-    Route::get('/tickets/{ticket}', [Admin\TicketController::class, 'show'])->name('tickets.show');
-    Route::post('/tickets/{ticket}/reply', [Admin\TicketController::class, 'reply'])->name('tickets.reply');
-    Route::post('/tickets/{ticket}/close', [Admin\TicketController::class, 'close'])->name('tickets.close');
-    Route::post('/tickets/{ticket}/reopen', [Admin\TicketController::class, 'reopen'])->name('tickets.reopen');
+    Route::get('/tickets', [Admin\TicketController::class, 'index'])->middleware('admin.section:support')->name('tickets.index');
+    Route::get('/tickets/{ticket}', [Admin\TicketController::class, 'show'])->middleware('admin.section:support')->name('tickets.show');
+    Route::post('/tickets/{ticket}/reply', [Admin\TicketController::class, 'reply'])->middleware('admin.section:support')->name('tickets.reply');
+    Route::post('/tickets/{ticket}/close', [Admin\TicketController::class, 'close'])->middleware('admin.section:support')->name('tickets.close');
+    Route::post('/tickets/{ticket}/reopen', [Admin\TicketController::class, 'reopen'])->middleware('admin.section:support')->name('tickets.reopen');
 
     // برودکست تلگرام
-    Route::get('/broadcast', [Admin\BroadcastController::class, 'index'])->name('broadcast.index');
-    Route::post('/broadcast', [Admin\BroadcastController::class, 'send'])->name('broadcast.send');
+    Route::get('/broadcast', [Admin\BroadcastController::class, 'index'])->middleware('admin.section:super')->name('broadcast.index');
+    Route::post('/broadcast', [Admin\BroadcastController::class, 'send'])->middleware('admin.section:super')->name('broadcast.send');
 
     // کاربران
-    Route::get('/users', [Admin\UserController::class, 'index'])->name('users.index');
-    Route::post('/users/{user}/toggle-block', [Admin\UserController::class, 'toggleBlock'])->name('users.toggle-block');
-    Route::post('/users/{user}/adjust-wallet', [Admin\UserController::class, 'adjustWallet'])->name('users.adjust-wallet');
-    Route::post('/users/{user}/send-telegram', [Admin\UserController::class, 'sendTelegram'])->name('users.send-telegram');
+    Route::get('/users', [Admin\UserController::class, 'index'])->middleware('admin.section:support')->name('users.index');
+    Route::post('/users/{user}/toggle-block', [Admin\UserController::class, 'toggleBlock'])->middleware('admin.section:support')->name('users.toggle-block');
+    Route::post('/users/{user}/adjust-wallet', [Admin\UserController::class, 'adjustWallet'])->middleware('admin.section:finance')->name('users.adjust-wallet');
+    Route::post('/users/{user}/send-telegram', [Admin\UserController::class, 'sendTelegram'])->middleware('admin.section:support')->name('users.send-telegram');
+    Route::post('/users/{user}/role', [Admin\UserController::class, 'setRole'])->middleware('admin.section:super')->name('users.role');
 
     // پلن‌ها
-    Route::get('/plans', [Admin\PlanController::class, 'index'])->name('plans.index');
-    Route::post('/plans', [Admin\PlanController::class, 'store'])->name('plans.store');
-    Route::put('/plans/{plan}', [Admin\PlanController::class, 'update'])->name('plans.update');
-    Route::delete('/plans/{plan}', [Admin\PlanController::class, 'destroy'])->name('plans.destroy');
+    Route::get('/plans', [Admin\PlanController::class, 'index'])->middleware('admin.section:super')->name('plans.index');
+    Route::post('/plans', [Admin\PlanController::class, 'store'])->middleware('admin.section:super')->name('plans.store');
+    Route::put('/plans/{plan}', [Admin\PlanController::class, 'update'])->middleware('admin.section:super')->name('plans.update');
+    Route::delete('/plans/{plan}', [Admin\PlanController::class, 'destroy'])->middleware('admin.section:super')->name('plans.destroy');
 
     // سرورها و اینباندها
-    Route::get('/inbounds', [Admin\InboundController::class, 'index'])->name('inbounds.index');
-    Route::post('/servers', [Admin\InboundController::class, 'storeServer'])->name('servers.store');
-    Route::put('/servers/{server}', [Admin\InboundController::class, 'updateServer'])->name('servers.update');
-    Route::delete('/servers/{server}', [Admin\InboundController::class, 'destroyServer'])->name('servers.destroy');
-    Route::post('/servers/{server}/test', [Admin\InboundController::class, 'testServer'])->name('servers.test');
-    Route::post('/servers/{server}/import', [Admin\InboundController::class, 'importInbounds'])->name('servers.import');
-    Route::post('/inbounds', [Admin\InboundController::class, 'storeInbound'])->name('inbounds.store');
-    Route::put('/inbounds/{inbound}', [Admin\InboundController::class, 'updateInbound'])->name('inbounds.update');
-    Route::delete('/inbounds/{inbound}', [Admin\InboundController::class, 'destroyInbound'])->name('inbounds.destroy');
+    Route::get('/inbounds', [Admin\InboundController::class, 'index'])->middleware('admin.section:super')->name('inbounds.index');
+    Route::post('/servers', [Admin\InboundController::class, 'storeServer'])->middleware('admin.section:super')->name('servers.store');
+    Route::put('/servers/{server}', [Admin\InboundController::class, 'updateServer'])->middleware('admin.section:super')->name('servers.update');
+    Route::delete('/servers/{server}', [Admin\InboundController::class, 'destroyServer'])->middleware('admin.section:super')->name('servers.destroy');
+    Route::post('/servers/{server}/test', [Admin\InboundController::class, 'testServer'])->middleware('admin.section:super')->name('servers.test');
+    Route::post('/servers/{server}/import', [Admin\InboundController::class, 'importInbounds'])->middleware('admin.section:super')->name('servers.import');
+    Route::post('/inbounds', [Admin\InboundController::class, 'storeInbound'])->middleware('admin.section:super')->name('inbounds.store');
+    Route::put('/inbounds/{inbound}', [Admin\InboundController::class, 'updateInbound'])->middleware('admin.section:super')->name('inbounds.update');
+    Route::delete('/inbounds/{inbound}', [Admin\InboundController::class, 'destroyInbound'])->middleware('admin.section:super')->name('inbounds.destroy');
 
     // تنظیمات
-    Route::get('/settings', [Admin\SettingController::class, 'edit'])->name('settings.edit');
-    Route::put('/settings', [Admin\SettingController::class, 'update'])->name('settings.update');
+    Route::get('/settings', [Admin\SettingController::class, 'edit'])->middleware('admin.section:super')->name('settings.edit');
+    Route::put('/settings', [Admin\SettingController::class, 'update'])->middleware('admin.section:super')->name('settings.update');
 });

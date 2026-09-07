@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Models\Ticket;
 use App\Models\TicketReply;
+use App\Services\AdminLog;
 use App\Services\NotificationService;
 use App\Services\Telegram\TelegramClient;
 use Illuminate\Http\RedirectResponse;
@@ -21,11 +22,18 @@ class TicketController extends Controller
     public function index(Request $request): View
     {
         $status = $request->query('status', '');
+        $q = trim((string) $request->query('q', ''));
 
         $tickets = Ticket::query()
             ->with(['user', 'replies'])
             ->when(in_array($status, [Ticket::STATUS_OPEN, Ticket::STATUS_ANSWERED, Ticket::STATUS_CLOSED], true),
-                fn ($q) => $q->where('status', $status))
+                fn ($query) => $query->where('status', $status))
+            ->when($q, fn ($query) => $query->where(fn ($w) => $w
+                ->when(is_numeric($q), fn ($w2) => $w2->where('id', $q))
+                ->orWhere('subject', 'like', "%{$q}%")
+                ->orWhereHas('user', fn ($u) => $u
+                    ->where('name', 'like', "%{$q}%")
+                    ->orWhere('phone', 'like', "%{$q}%"))))
             ->latest('last_reply_at')
             ->paginate(20)
             ->withQueryString();
@@ -33,6 +41,7 @@ class TicketController extends Controller
         return view('admin.tickets.index', [
             'tickets' => $tickets,
             'status' => $status,
+            'q' => $q,
             'openCount' => Ticket::query()->where('status', Ticket::STATUS_OPEN)->count(),
             'answeredCount' => Ticket::query()->where('status', Ticket::STATUS_ANSWERED)->count(),
         ]);
@@ -98,12 +107,16 @@ class TicketController extends Controller
     {
         $ticket->update(['status' => Ticket::STATUS_CLOSED]);
 
+        AdminLog::record($request->user(), 'ticket_closed', $ticket);
+
         return back()->with('success', __('تیکت بسته شد.'));
     }
 
     public function reopen(Request $request, Ticket $ticket): RedirectResponse
     {
         $ticket->update(['status' => Ticket::STATUS_OPEN]);
+
+        AdminLog::record($request->user(), 'ticket_reopened', $ticket);
 
         return back()->with('success', __('تیکت مجدداً باز شد.'));
     }

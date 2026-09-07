@@ -8,6 +8,7 @@
     <form method="GET" class="flex gap-2">
         <input type="text" name="q" value="{{ $q }}" placeholder="{{ __('جستجوی نام یا شماره...') }}" class="glass-input">
         <button class="btn-ghost">{{ __('جستجو') }}</button>
+        <a href="{{ route('admin.users.index', array_filter(['q' => $q, 'export' => 'csv'])) }}" class="btn-ghost">📥 {{ __('CSV') }}</a>
     </form>
 </div>
 
@@ -32,7 +33,24 @@
                     <td dir="ltr">{{ $user->phone }}</td>
                     <td>{{ $user->orders_count }}</td>
                     <td class="font-bold text-emerald-600 dark:text-emerald-400">{{ number_format($user->balance) }}</td>
-                    <td>{{ $user->isAdmin() ? __('مدیر') : __('کاربر') }}</td>
+                    <td>
+                        {{ $user->isAdmin() ? $user->adminRoleLabel() : __('کاربر') }}
+                        @if (auth()->user()->isSuperAdmin() && $user->id !== auth()->id())
+                            <details>
+                                <summary class="cursor-pointer list-none text-xs font-bold text-violet-600 dark:text-violet-400">⚙️ {{ __('تغییر نقش') }}</summary>
+                                <form method="POST" action="{{ route('admin.users.role', $user) }}" class="mt-2 flex flex-wrap gap-2">
+                                    @csrf
+                                    <label class="flex items-center gap-1 text-xs"><input type="checkbox" name="is_admin" value="1" {{ $user->isAdmin() ? 'checked' : '' }} class="h-4 w-4"> {{ __('مدیر') }}</label>
+                                    <select name="admin_role" class="glass-input w-28 text-xs">
+                                        @foreach (\App\Models\User::ADMIN_ROLES as $key => $label)
+                                            <option value="{{ $key }}" {{ $user->admin_role === $key ? 'selected' : '' }}>{{ __($label) }}</option>
+                                        @endforeach
+                                    </select>
+                                    <button class="btn-primary px-3 py-1 text-xs">{{ __('ثبت') }}</button>
+                                </form>
+                            </details>
+                        @endif
+                    </td>
                     <td><span class="{{ $user->isBlocked() ? 'badge-red' : 'badge-green' }}">{{ $user->isBlocked() ? __('مسدود') : __('فعال') }}</span></td>
                     <td class="text-slate-400">{{ \App\Support\Format::date($user->created_at, false) }}</td>
                     <td>

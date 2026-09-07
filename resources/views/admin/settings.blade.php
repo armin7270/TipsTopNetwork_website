@@ -150,6 +150,85 @@
         </div>
     </div>
 
+    <div class="glass-card p-6">
+        <h2 class="font-black text-slate-800 dark:text-white">⚡ {{ __('درگاه پرداخت آنلاین (زرین‌پال)') }}</h2>
+        <div class="mt-4 space-y-4 text-sm">
+            <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                    <label class="glass-label">{{ __('فعال بودن درگاه') }}</label>
+                    <select name="zp_enabled" class="glass-input">
+                        <option value="1" {{ $zpEnabled === '1' ? 'selected' : '' }}>{{ __('فعال') }}</option>
+                        <option value="0" {{ $zpEnabled !== '1' ? 'selected' : '' }}>{{ __('غیرفعال') }}</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="glass-label">{{ __('حالت تست (Sandbox)') }}</label>
+                    <select name="zp_sandbox" class="glass-input">
+                        <option value="1" {{ $zpSandbox === '1' ? 'selected' : '' }}>{{ __('تست') }}</option>
+                        <option value="0" {{ $zpSandbox !== '1' ? 'selected' : '' }}>{{ __('واقعی') }}</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label class="glass-label">{{ __('مرچنت‌کد (Merchant ID)') }}</label>
+                <input type="text" name="zp_merchant_id" value="{{ old('zp_merchant_id', $zpMerchantId) }}" dir="ltr" class="glass-input text-start" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+            </div>
+            <p class="text-xs text-slate-400">{{ __('بعد از فعال‌سازی، گزینه «پرداخت آنلاین» در صفحه خرید ظاهر و سفارش به‌صورت خودکار فعال می‌شود.') }}</p>
+        </div>
+    </div>
+
+    <div class="glass-card p-6">
+        <h2 class="font-black text-slate-800 dark:text-white">₿ {{ __('پرداخت کریپتو (NOWPayments)') }}</h2>
+        <div class="mt-4 space-y-4 text-sm">
+            <div>
+                <label class="glass-label">{{ __('فعال بودن پرداخت کریپتو') }}</label>
+                <select name="np_enabled" class="glass-input">
+                    <option value="1" {{ $npEnabled === '1' ? 'selected' : '' }}>{{ __('فعال') }}</option>
+                    <option value="0" {{ $npEnabled !== '1' ? 'selected' : '' }}>{{ __('غیرفعال') }}</option>
+                </select>
+            </div>
+            <div>
+                <label class="glass-label">{{ __('کلید API (از داشبورد NOWPayments)') }}</label>
+                <input type="text" name="np_api_key" value="{{ old('np_api_key', $npApiKey) }}" dir="ltr" class="glass-input text-start">
+            </div>
+            <div>
+                <label class="glass-label">{{ __('رمز IPN (برای تایید وبهوک)') }}</label>
+                <input type="text" name="np_ipn_secret" value="{{ old('np_ipn_secret', $npIpnSecret) }}" dir="ltr" class="glass-input text-start">
+            </div>
+            <div>
+                <label class="glass-label">{{ __('نرخ تبدیل دلار به تومان (برای محاسبه مبلغ فاکتور)') }}</label>
+                <input type="number" name="np_usd_rate_toman" value="{{ old('np_usd_rate_toman', $npUsdRate) }}" min="1000" dir="ltr" class="glass-input text-start">
+            </div>
+            <p class="rounded-2xl border border-slate-900/10 bg-white/40 p-3 text-xs text-slate-500 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-400">
+                {{ __('آدرس IPN:') }} <b dir="ltr">{{ rtrim(config('app.url'), '/') }}/webhooks/nowpayments</b>
+            </p>
+        </div>
+    </div>
+
+    <div class="glass-card p-6">
+        <h2 class="font-black text-slate-800 dark:text-white">📩 {{ __('اعلان پیامکی (کاوه‌نگار)') }}</h2>
+        <div class="mt-4 space-y-4 text-sm">
+            <div>
+                <label class="glass-label">{{ __('فعال بودن پیامک') }}</label>
+                <select name="sms_enabled" class="glass-input">
+                    <option value="1" {{ $smsEnabled === '1' ? 'selected' : '' }}>{{ __('فعال') }}</option>
+                    <option value="0" {{ $smsEnabled !== '1' ? 'selected' : '' }}>{{ __('غیرفعال') }}</option>
+                </select>
+            </div>
+            <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                    <label class="glass-label">{{ __('کلید API کاوه‌نگار') }}</label>
+                    <input type="text" name="sms_api_key" value="{{ old('sms_api_key', $smsApiKey) }}" dir="ltr" class="glass-input text-start">
+                </div>
+                <div>
+                    <label class="glass-label">{{ __('شماره فرستنده') }}</label>
+                    <input type="text" name="sms_sender" value="{{ old('sms_sender', $smsSender) }}" dir="ltr" class="glass-input text-start">
+                </div>
+            </div>
+            <p class="text-xs text-slate-400">{{ __('یادآوری انقضا و تایید سفارش برای کاربرانی که تلگرام ندارند، پیامک می‌شود.') }}</p>
+        </div>
+    </div>
+
     <button class="btn-primary">{{ __('ذخیره تنظیمات') }}</button>
 </form>
 

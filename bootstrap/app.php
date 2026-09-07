@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Middleware\EnsureAdmin;
+use App\Http\Middleware\EnsureAdminSection;
+use App\Http\Middleware\RedirectIfPasswordChangeRequired;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -16,10 +18,12 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'admin' => EnsureAdmin::class,
+            'admin.section' => EnsureAdminSection::class,
         ]);
 
         $middleware->web(append: [
             SetLocale::class,
+            RedirectIfPasswordChangeRequired::class,
         ]);
 
         // پشتیبانی از ابر/پروکسی (Cloudflare و Nginx) برای تشخیص IP و HTTPS واقعی

@@ -52,16 +52,31 @@
         @endphp
 
         <nav class="space-y-1 text-sm font-medium">
-            <a href="{{ route('admin.dashboard') }}" class="block rounded-2xl px-4 py-2.5 transition {{ $current === 'dashboard' ? 'bg-gradient-to-l from-violet-500/15 to-fuchsia-500/15 font-bold text-violet-600 dark:text-violet-400' : 'text-slate-600 hover:bg-white/40 dark:text-slate-300 dark:hover:bg-white/5' }}">📊 {{ __('داشبورد') }}</a>
-            <a href="{{ route('admin.payments.index') }}" class="block rounded-2xl px-4 py-2.5 transition {{ $current === 'payments' ? 'bg-gradient-to-l from-violet-500/15 to-fuchsia-500/15 font-bold text-violet-600 dark:text-violet-400' : 'text-slate-600 hover:bg-white/40 dark:text-slate-300 dark:hover:bg-white/5' }}">💰 {{ __('پرداخت‌ها') }}</a>
-            <a href="{{ route('admin.wallet-deposits.index') }}" class="block rounded-2xl px-4 py-2.5 transition {{ $current === 'wallet-deposits' ? 'bg-gradient-to-l from-violet-500/15 to-fuchsia-500/15 font-bold text-violet-600 dark:text-violet-400' : 'text-slate-600 hover:bg-white/40 dark:text-slate-300 dark:hover:bg-white/5' }}">💳 {{ __('شارژ کیف پول') }}</a>
-            <a href="{{ route('admin.orders.index') }}" class="block rounded-2xl px-4 py-2.5 transition {{ $current === 'orders' ? 'bg-gradient-to-l from-violet-500/15 to-fuchsia-500/15 font-bold text-violet-600 dark:text-violet-400' : 'text-slate-600 hover:bg-white/40 dark:text-slate-300 dark:hover:bg-white/5' }}">📦 {{ __('سفارش‌ها') }}</a>
-            <a href="{{ route('admin.tickets.index') }}" class="block rounded-2xl px-4 py-2.5 transition {{ $current === 'tickets' ? 'bg-gradient-to-l from-violet-500/15 to-fuchsia-500/15 font-bold text-violet-600 dark:text-violet-400' : 'text-slate-600 hover:bg-white/40 dark:text-slate-300 dark:hover:bg-white/5' }}">🎧 {{ __('تیکت‌ها') }}</a>
-            <a href="{{ route('admin.broadcast.index') }}" class="block rounded-2xl px-4 py-2.5 transition {{ $current === 'broadcast' ? 'bg-gradient-to-l from-violet-500/15 to-fuchsia-500/15 font-bold text-violet-600 dark:text-violet-400' : 'text-slate-600 hover:bg-white/40 dark:text-slate-300 dark:hover:bg-white/5' }}">📣 {{ __('برودکست') }}</a>
-            <a href="{{ route('admin.users.index') }}" class="block rounded-2xl px-4 py-2.5 transition {{ $current === 'users' ? 'bg-gradient-to-l from-violet-500/15 to-fuchsia-500/15 font-bold text-violet-600 dark:text-violet-400' : 'text-slate-600 hover:bg-white/40 dark:text-slate-300 dark:hover:bg-white/5' }}">👥 {{ __('کاربران') }}</a>
-            <a href="{{ route('admin.plans.index') }}" class="block rounded-2xl px-4 py-2.5 transition {{ $current === 'plans' ? 'bg-gradient-to-l from-violet-500/15 to-fuchsia-500/15 font-bold text-violet-600 dark:text-violet-400' : 'text-slate-600 hover:bg-white/40 dark:text-slate-300 dark:hover:bg-white/5' }}">🏷️ {{ __('پلن‌ها') }}</a>
-            <a href="{{ route('admin.inbounds.index') }}" class="block rounded-2xl px-4 py-2.5 transition {{ $current === 'inbounds' ? 'bg-gradient-to-l from-violet-500/15 to-fuchsia-500/15 font-bold text-violet-600 dark:text-violet-400' : 'text-slate-600 hover:bg-white/40 dark:text-slate-300 dark:hover:bg-white/5' }}">🖥️ {{ __('سرورها و اینباندها') }}</a>
-            <a href="{{ route('admin.settings.edit') }}" class="block rounded-2xl px-4 py-2.5 transition {{ $current === 'settings' ? 'bg-gradient-to-l from-violet-500/15 to-fuchsia-500/15 font-bold text-violet-600 dark:text-violet-400' : 'text-slate-600 hover:bg-white/40 dark:text-slate-300 dark:hover:bg-white/5' }}">⚙️ {{ __('تنظیمات') }}</a>
+            @php
+                $me = auth()->user();
+                $navActive = 'bg-gradient-to-l from-violet-500/15 to-fuchsia-500/15 font-bold text-violet-600 dark:text-violet-400';
+                $navIdle = 'text-slate-600 hover:bg-white/40 dark:text-slate-300 dark:hover:bg-white/5';
+            @endphp
+            <a href="{{ route('admin.dashboard') }}" class="block rounded-2xl px-4 py-2.5 transition {{ $current === 'dashboard' ? $navActive : $navIdle }}">📊 {{ __('داشبورد') }}</a>
+            @if ($me->isSuperAdmin())
+                <a href="{{ route('admin.setup') }}" class="block rounded-2xl px-4 py-2.5 transition {{ request()->routeIs('admin.setup') ? $navActive : $navIdle }}">🧭 {{ __('راه‌اندازی') }}</a>
+            @endif
+            @if ($me->canAccessSection('finance'))
+                <a href="{{ route('admin.payments.index') }}" class="block rounded-2xl px-4 py-2.5 transition {{ $current === 'payments' ? $navActive : $navIdle }}">💰 {{ __('پرداخت‌ها') }}</a>
+                <a href="{{ route('admin.wallet-deposits.index') }}" class="block rounded-2xl px-4 py-2.5 transition {{ $current === 'wallet-deposits' ? $navActive : $navIdle }}">💳 {{ __('شارژ کیف پول') }}</a>
+                <a href="{{ route('admin.orders.index') }}" class="block rounded-2xl px-4 py-2.5 transition {{ $current === 'orders' ? $navActive : $navIdle }}">📦 {{ __('سفارش‌ها') }}</a>
+            @endif
+            @if ($me->canAccessSection('support'))
+                <a href="{{ route('admin.tickets.index') }}" class="block rounded-2xl px-4 py-2.5 transition {{ $current === 'tickets' ? $navActive : $navIdle }}">🎧 {{ __('تیکت‌ها') }}</a>
+                <a href="{{ route('admin.users.index') }}" class="block rounded-2xl px-4 py-2.5 transition {{ $current === 'users' ? $navActive : $navIdle }}">👥 {{ __('کاربران') }}</a>
+            @endif
+            @if ($me->isSuperAdmin())
+                <a href="{{ route('admin.broadcast.index') }}" class="block rounded-2xl px-4 py-2.5 transition {{ $current === 'broadcast' ? $navActive : $navIdle }}">📣 {{ __('برودکست') }}</a>
+                <a href="{{ route('admin.plans.index') }}" class="block rounded-2xl px-4 py-2.5 transition {{ $current === 'plans' ? $navActive : $navIdle }}">🏷️ {{ __('پلن‌ها') }}</a>
+                <a href="{{ route('admin.inbounds.index') }}" class="block rounded-2xl px-4 py-2.5 transition {{ $current === 'inbounds' ? $navActive : $navIdle }}">🖥️ {{ __('سرورها و اینباندها') }}</a>
+                <a href="{{ route('admin.settings.edit') }}" class="block rounded-2xl px-4 py-2.5 transition {{ $current === 'settings' ? $navActive : $navIdle }}">⚙️ {{ __('تنظیمات') }}</a>
+                <a href="{{ route('admin.activity-logs.index') }}" class="block rounded-2xl px-4 py-2.5 transition {{ request()->routeIs('admin.activity-logs.*') ? $navActive : $navIdle }}">🧾 {{ __('لاگ فعالیت‌ها') }}</a>
+            @endif
 
             <div class="my-3 border-t border-slate-900/10 dark:border-white/10"></div>
             <a href="{{ route('dashboard') }}" class="block rounded-2xl px-4 py-2.5 text-slate-500 transition hover:bg-white/40 dark:text-slate-400 dark:hover:bg-white/5">👤 {{ __('پنل کاربری') }}</a>

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Jobs\SendTelegramBroadcast;
 use App\Models\Setting;
 use App\Models\User;
+use App\Services\AdminLog;
 use App\Services\Telegram\TelegramClient;
 use App\Support\Format;
 use Illuminate\Http\RedirectResponse;
@@ -38,6 +39,8 @@ class BroadcastController extends Controller
         ]);
 
         SendTelegramBroadcast::dispatch(nl2br(e($validated['message'])));
+
+        AdminLog::record($request->user(), 'broadcast_sent', null, mb_substr($validated['message'], 0, 120));
 
         return back()->with('success', __('پیام همگانی در صف ارسال قرار گرفت. به‌تدریج برای همه کاربران ارسال می‌شود.'));
     }

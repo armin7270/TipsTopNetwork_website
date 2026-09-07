@@ -5,6 +5,12 @@
 @section('content')
 <h1 class="text-2xl font-black text-slate-800 dark:text-white">{{ __('صف تایید شارژ کیف پول') }}</h1>
 
+<form method="GET" action="{{ route('admin.wallet-deposits.index') }}" class="glass-card mt-4 flex flex-wrap gap-2 p-3">
+    <input type="text" name="q" value="{{ $q }}" placeholder="{{ __('جستجو: شناسه، نام/موبایل کاربر...') }}" class="glass-input flex-1">
+    <button class="btn-ghost">{{ __('جستجو') }}</button>
+    <a href="{{ route('admin.wallet-deposits.index', array_filter(['q' => $q, 'export' => 'csv'])) }}" class="btn-ghost">📥 {{ __('خروجی CSV') }}</a>
+</form>
+
 <div class="mt-6 space-y-4">
     @forelse ($transactions as $transaction)
         <div class="glass-card p-6">

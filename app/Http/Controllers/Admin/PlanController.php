@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Inbound;
 use App\Models\Plan;
+use App\Services\AdminLog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -27,6 +28,8 @@ class PlanController extends Controller
         $plan = Plan::create($validated);
         $plan->inbounds()->sync($request->input('inbounds', []));
 
+        AdminLog::record($request->user(), 'plan_created', $plan);
+
         return redirect()->route('admin.plans.index')->with('success', __('پلن ساخته شد.'));
     }
 
@@ -37,10 +40,12 @@ class PlanController extends Controller
         $plan->update($validated);
         $plan->inbounds()->sync($request->input('inbounds', []));
 
+        AdminLog::record($request->user(), 'plan_updated', $plan);
+
         return redirect()->route('admin.plans.index')->with('success', __('پلن به‌روزرسانی شد.'));
     }
 
-    public function destroy(Plan $plan): RedirectResponse
+    public function destroy(Request $request, Plan $plan): RedirectResponse
     {
         if ($plan->orders()->exists()) {
             $plan->update(['is_active' => false]);
@@ -48,6 +53,7 @@ class PlanController extends Controller
             return back()->with('success', __('این پلن سفارش دارد و حذف نشد؛ به‌جای آن غیرفعال شد.'));
         }
 
+        AdminLog::record($request->user(), 'plan_deleted', $plan, $plan->name);
         $plan->delete();
 
         return back()->with('success', __('پلن حذف شد.'));

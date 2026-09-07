@@ -32,6 +32,7 @@ class PagesRenderTest extends TestCase
                 'name' => 'مدیر',
                 'phone' => '09120000000',
                 'password' => 'admin',
+                'password_changed_at' => now(),
                 'status' => 'active',
                 'is_admin' => true,
             ]

@@ -17,6 +17,17 @@
         <input type="number" name="amount" min="{{ $minDeposit }}" value="{{ $minDeposit }}" required class="glass-input flex-1" dir="ltr">
         <button class="btn-primary">{{ __('ادامه و مشاهده کارت‌ها') }}</button>
     </form>
+
+    @if ($cryptoEnabled)
+        <div class="mt-4 border-t border-dashed border-slate-900/10 pt-4 dark:border-white/10">
+            <p class="text-xs text-slate-500 dark:text-slate-400">₿ {{ __('یا با ارز دیجیتال شارژ کنید (تایید خودکار):') }}</p>
+            <form method="POST" action="{{ route('wallet.charge-crypto') }}" class="mt-2 flex flex-wrap gap-2">
+                @csrf
+                <input type="number" name="amount" min="{{ $minDeposit }}" value="{{ $minDeposit }}" required class="glass-input flex-1" dir="ltr">
+                <button class="btn-ghost">₿ {{ __('پرداخت با کریپتو') }}</button>
+            </form>
+        </div>
+    @endif
 </div>
 
 @if ($pendingDeposit)

@@ -11,6 +11,18 @@
         <span class="text-xl font-black text-indigo-600 dark:text-indigo-400">{{ number_format($transaction->amount) }} {{ __('تومان') }}</span>
     </div>
 
+    @if ($transaction->method === 'crypto')
+        <div class="animate-pop-in mt-6 rounded-3xl border border-fuchsia-400/30 bg-fuchsia-500/5 p-6 text-center">
+            <div class="text-4xl">₿</div>
+            <h2 class="mt-3 font-black text-slate-800 dark:text-white">{{ __('پرداخت کریپتو') }}</h2>
+            <p class="mt-2 text-sm leading-7 text-slate-500 dark:text-slate-400">{{ __('برای تکمیل شارژ، روی دکمه زیر بزنید و در صفحه NOWPayments با ارز دیجیتال پرداخت کنید. بعد از تایید شبکه، کیف پول شما خودکار شارژ می‌شود.') }}</p>
+            @if (! empty($transaction->meta['np_invoice_url']))
+                <a href="{{ $transaction->meta['np_invoice_url'] }}" target="_blank" rel="noopener" class="btn-primary mt-5">{{ __('ادامه پرداخت در NOWPayments') }}</a>
+            @endif
+            <p class="mt-3 text-xs text-slate-400">{{ __('اگر پرداخت را انجام داده‌اید، چند دقیقه صبر کنید و صفحه کیف پول را رفرش کنید.') }}</p>
+            <a href="{{ route('wallet.index') }}" class="btn-ghost mt-4">{{ __('بازگشت به کیف پول') }}</a>
+        </div>
+    @else
     @if ($cards)
         <h2 class="mt-6 font-black text-slate-800 dark:text-white">{{ __('واریز به کارت‌های زیر:') }}</h2>
         <div class="mt-3 space-y-3">
@@ -45,5 +57,6 @@
             <a href="{{ route('wallet.index') }}" class="btn-ghost">{{ __('انصراف') }}</a>
         </div>
     </form>
+    @endif
 </div>
 @endsection

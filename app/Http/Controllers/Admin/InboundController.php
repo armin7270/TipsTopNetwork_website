@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Inbound;
 use App\Models\Server;
+use App\Services\AdminLog;
 use App\Services\Xui\XuiService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,7 +25,9 @@ class InboundController extends Controller
     {
         $validated = $this->validateServer($request);
 
-        Server::create($validated);
+        $server = Server::create($validated);
+
+        AdminLog::record($request->user(), 'server_created', $server, $server->name);
 
         return back()->with('success', __('سرور اضافه شد. حالا با دکمه «دریافت از پنل» اینباند‌ها را ایمپورت کنید.'));
     }
@@ -39,11 +42,14 @@ class InboundController extends Controller
 
         $server->update($validated);
 
+        AdminLog::record($request->user(), 'server_updated', $server, $server->name);
+
         return back()->with('success', __('سرور به‌روزرسانی شد.'));
     }
 
-    public function destroyServer(Server $server): RedirectResponse
+    public function destroyServer(Request $request, Server $server): RedirectResponse
     {
+        AdminLog::record($request->user(), 'server_deleted', $server, $server->name);
         $server->delete();
 
         return back()->with('success', __('سرور و اینباندهای آن حذف شدند.'));
@@ -119,11 +125,14 @@ class InboundController extends Controller
 
         $inbound->update($validated);
 
+        AdminLog::record($request->user(), 'inbound_updated', $inbound);
+
         return back()->with('success', __('اینباند به‌روزرسانی شد.'));
     }
 
-    public function destroyInbound(Inbound $inbound): RedirectResponse
+    public function destroyInbound(Request $request, Inbound $inbound): RedirectResponse
     {
+        AdminLog::record($request->user(), 'inbound_deleted', $inbound);
         $inbound->delete();
 
         return back()->with('success', __('اینباند حذف شد.'));

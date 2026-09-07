@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Setting;
 use App\Models\Transaction;
 use App\Services\NotificationService;
+use App\Services\Payments\NowPaymentsService;
 use App\Services\WalletService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,6 +25,7 @@ class WalletController extends Controller
         return view('wallet.index', [
             'transactions' => $user->transactions()->paginate(15),
             'minDeposit' => max(1000, (int) Setting::get('wallet_min_deposit', 10000)),
+            'cryptoEnabled' => NowPaymentsService::isEnabled(),
             'pendingDeposit' => $user->transactions()
                 ->where('type', Transaction::TYPE_DEPOSIT)
                 ->whereIn('status', [Transaction::STATUS_PENDING, Transaction::STATUS_AWAITING_VERIFICATION])
@@ -51,6 +53,38 @@ class WalletController extends Controller
         return redirect()
             ->route('wallet.deposit', $transaction)
             ->with('success', __('درخواست شارژ ثبت شد. لطفاً مبلغ را واریز و رسید را ثبت کنید.'));
+    }
+
+    /**
+     * ثبت درخواست شارژ با کریپتو (ساخت فاکتور NOWPayments و هدایت به درگاه)
+     */
+    public function chargeCrypto(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'amount' => ['required', 'integer', 'min:1'],
+        ], [
+            'amount.required' => __('مبلغ شارژ الزامی است.'),
+        ]);
+
+        try {
+            $transaction = $this->wallet->createDeposit($request->user(), (int) $validated['amount'], 'crypto');
+
+            $invoice = NowPaymentsService::createInvoice(
+                $transaction->id,
+                $transaction->amount,
+                route('wallet.index'),
+                route('wallet.deposit', $transaction),
+            );
+
+            $transaction->update(['meta' => array_merge($transaction->meta ?? [], [
+                'np_invoice_id' => $invoice['invoice_id'],
+                'np_invoice_url' => $invoice['url'],
+            ])]);
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->away($invoice['url']);
     }
 
     /**

@@ -17,6 +17,9 @@ class Server extends Model
         'password',
         'public_host',
         'is_active',
+        'last_check_at',
+        'last_check_ok',
+        'last_check_error',
     ];
 
     protected $hidden = [
@@ -28,6 +31,8 @@ class Server extends Model
         return [
             'password' => 'encrypted',
             'is_active' => 'boolean',
+            'last_check_at' => 'datetime',
+            'last_check_ok' => 'boolean',
         ];
     }
 

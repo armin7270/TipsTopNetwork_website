@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Inbound;
 use App\Models\Setting;
+use App\Services\AdminLog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -20,11 +21,23 @@ class SettingController extends Controller
             'cards' => Setting::getJson('cards', []),
             // تلگرام
             'tgBotEnabled' => Setting::get('tg_bot_enabled', '0'),
-            'tgBotToken' => Setting::get('tg_bot_token', ''),
-            'tgAdminChatId' => Setting::get('tg_admin_chat_id', ''),
+            'tgBotToken' => Setting::get('tg_bot_token', ''),            'tgAdminChatId' => Setting::get('tg_admin_chat_id', ''),
             'tgForceChannel' => Setting::get('tg_force_channel', ''),
             'tgWebhookSecret' => Setting::get('tg_webhook_secret', ''),
             'tgDepositAmounts' => Setting::getJson('tg_deposit_amounts', [50000, 100000, 200000, 500000]),
+            // درگاه پرداخت آنلاین (زرین‌پال)
+            'zpEnabled' => Setting::get('zp_enabled', '0'),
+            'zpMerchantId' => Setting::get('zp_merchant_id', ''),
+            'zpSandbox' => Setting::get('zp_sandbox', '0'),
+            // پرداخت کریپتو (NOWPayments)
+            'npEnabled' => Setting::get('np_enabled', '0'),
+            'npApiKey' => Setting::get('np_api_key', ''),
+            'npIpnSecret' => Setting::get('nowpayments_ipn_secret', ''),
+            'npUsdRate' => Setting::get('np_usd_rate_toman', 100000),
+            // پیامک (کاوه‌نگار)
+            'smsEnabled' => Setting::get('sms_enabled', '0'),
+            'smsApiKey' => Setting::get('sms_api_key', ''),
+            'smsSender' => Setting::get('sms_sender', ''),
             // کیف پول
             'walletMinDeposit' => Setting::get('wallet_min_deposit', 10000),
             // معرفی (رفرال)
@@ -59,6 +72,19 @@ class SettingController extends Controller
             'tg_force_channel' => ['nullable', 'string', 'max:100'],
             'tg_webhook_secret' => ['nullable', 'string', 'max:64'],
             'tg_deposit_amounts' => ['nullable', 'string', 'max:500'],
+            // درگاه زرین‌پال
+            'zp_enabled' => ['nullable', 'in:1,0'],
+            'zp_merchant_id' => ['nullable', 'string', 'max:100'],
+            'zp_sandbox' => ['nullable', 'in:1,0'],
+            // کریپتو
+            'np_enabled' => ['nullable', 'in:1,0'],
+            'np_api_key' => ['nullable', 'string', 'max:200'],
+            'np_ipn_secret' => ['nullable', 'string', 'max:200'],
+            'np_usd_rate_toman' => ['nullable', 'integer', 'min:1000'],
+            // پیامک
+            'sms_enabled' => ['nullable', 'in:1,0'],
+            'sms_api_key' => ['nullable', 'string', 'max:200'],
+            'sms_sender' => ['nullable', 'string', 'max:30'],
             // کیف پول
             'wallet_min_deposit' => ['required', 'integer', 'min:1000'],
             // رفرال
@@ -123,6 +149,24 @@ class SettingController extends Controller
         Setting::set('trial_duration_hours', $validated['trial_duration_hours']);
         Setting::set('trial_limit_per_user', $validated['trial_limit_per_user']);
         Setting::set('trial_inbound_id', $validated['trial_inbound_id'] ?? null);
+
+        // درگاه زرین‌پال
+        Setting::set('zp_enabled', $validated['zp_enabled'] ?? '0');
+        Setting::set('zp_merchant_id', trim($validated['zp_merchant_id'] ?? ''));
+        Setting::set('zp_sandbox', $validated['zp_sandbox'] ?? '0');
+
+        // کریپتو
+        Setting::set('np_enabled', $validated['np_enabled'] ?? '0');
+        Setting::set('np_api_key', trim($validated['np_api_key'] ?? ''));
+        Setting::set('nowpayments_ipn_secret', trim($validated['np_ipn_secret'] ?? ''));
+        Setting::set('np_usd_rate_toman', max(1000, (int) ($validated['np_usd_rate_toman'] ?? 100000)));
+
+        // پیامک
+        Setting::set('sms_enabled', $validated['sms_enabled'] ?? '0');
+        Setting::set('sms_api_key', trim($validated['sms_api_key'] ?? ''));
+        Setting::set('sms_sender', trim($validated['sms_sender'] ?? ''));
+
+        AdminLog::record($request->user(), 'settings_updated');
 
         return back()->with('success', __('تنظیمات ذخیره شد.'));
     }

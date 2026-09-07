@@ -14,6 +14,12 @@
                     <div class="font-black text-slate-800 dark:text-white">{{ $server->name }}</div>
                     <span class="{{ $server->is_active ? 'badge-green' : 'badge-red' }}">{{ $server->is_active ? __('فعال') : __('غیرفعال') }}</span>
                 </div>
+                @if ($server->last_check_at)
+                    <div class="mt-1 text-xs {{ $server->last_check_ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400' }}">
+                        {{ $server->last_check_ok ? '●' : '●' }} {{ __('آخرین بررسی') }}: {{ \App\Support\Format::date($server->last_check_at) }}
+                        @if (! $server->last_check_ok && $server->last_check_error)— {{ \Illuminate\Support\Str::limit($server->last_check_error, 80) }}@endif
+                    </div>
+                @endif
                 <div dir="ltr" class="mt-2 text-start text-xs text-slate-400">{{ $server->api_scheme }}://{{ $server->api_host }}:{{ $server->api_port }}{{ $server->api_path ? '/'.$server->api_path : '' }}</div>
                 <div class="mt-1 text-xs text-slate-400">{{ $server->inbounds->count() }} {{ __('اینباند ثبت شده') }} @if($server->public_host) — {{ __('دامنه عمومی') }}: <span dir="ltr">{{ $server->public_host }}</span>@endif</div>
                 <div class="mt-3 flex flex-wrap gap-2">

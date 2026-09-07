@@ -5,6 +5,17 @@
 @section('content')
 <h1 class="text-2xl font-black text-slate-800 dark:text-white">{{ __('داشبورد مدیریت') }}</h1>
 
+@if (! \App\Models\Server::query()->exists() || ! \App\Models\Plan::query()->where('is_active', true)->exists() || count(\App\Models\Setting::getJson('cards', [])) === 0)
+    <a href="{{ route('admin.setup') }}" class="glass-card glow-border animate-pop-in mt-5 flex flex-wrap items-center gap-3 border-amber-400/40 p-5">
+        <span class="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-xl text-white">🧭</span>
+        <span class="flex-1">
+            <span class="block font-black text-slate-800 dark:text-white">{{ __('راه‌اندازی فروشگاه هنوز کامل نشده است') }}</span>
+            <span class="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">{{ __('برای شروع فروش، چک‌لیست قدم‌به‌قدم را کامل کنید.') }}</span>
+        </span>
+        <span class="btn-primary text-xs">{{ __('شروع راه‌اندازی') }}</span>
+    </a>
+@endif
+
 <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
     <div class="glass-card lift p-5">
         <div class="text-xs text-slate-400">{{ __('کاربران') }}</div>

@@ -26,7 +26,9 @@ class User extends Authenticatable
         'username',
         'phone',
         'password',
+        'password_changed_at',
         'is_admin',
+        'admin_role',
         'status',
         'subscription_code',
         'balance',
@@ -43,11 +45,20 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    /**
+     * مقادیر پیش‌فرض در سطح مدل (مهم: پیش‌فرض دیتابیس به نمونه in-memory برنمی‌گردد
+     * و چک‌های نقش روی همان نمونه انجام می‌شود)
+     */
+    protected $attributes = [
+        'admin_role' => 'super',
+    ];
+
     protected function casts(): array
     {
         return [
             'password' => 'hashed',
             'is_admin' => 'boolean',
+            'password_changed_at' => 'datetime',
         ];
     }
 
@@ -73,6 +84,38 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return (bool) $this->is_admin;
+    }
+
+    public const ADMIN_ROLES = [
+        'super' => 'مدیرکل',
+        'finance' => 'مدیر مالی',
+        'support' => 'پشتیبانی',
+    ];
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->isAdmin() && $this->admin_role === 'super';
+    }
+
+    public function adminRoleLabel(): string
+    {
+        return __(self::ADMIN_ROLES[$this->admin_role] ?? $this->admin_role);
+    }
+
+    /**
+     * آیا این مدیر به بخش مشخصی از پنل دسترسی دارد؟
+     */
+    public function canAccessSection(string $section): bool
+    {
+        if (! $this->isAdmin()) {
+            return false;
+        }
+
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        return $this->admin_role === $section;
     }
 
     public function isBlocked(): bool
