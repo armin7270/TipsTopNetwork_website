@@ -1,0 +1,69 @@
+name: Deploy to Shared Hosting (FTP)
+
+# دیپلوی خودکار روی هاست اشتراکی (مثل InfinityFree) با هر push
+# راه‌اندازی: Settings → Secrets → Actions در گیت‌هاب، این ۵ مورد را اضافه کنید:
+#   FTP_SERVER, FTP_USERNAME, FTP_PASSWORD, SITE_URL (مثل https://site.com), DEPLOY_KEY
+# برای فعال شدن با هر push، بخش push زیر را از کامنت دربیاورید.
+
+on:
+  workflow_dispatch:
+  # push:
+  #   branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: gd, sqlite3, pdo_sqlite, mbstring, bcmath, intl
+          coverage: none
+
+      - name: Install Composer deps
+        run: composer install --no-dev --prefer-dist --no-progress --optimize-autoloader
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Build frontend
+        run: |
+          npm ci --ignore-scripts
+          npm run build
+
+      - name: Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftp
+          port: 21
+          local-dir: ./
+          server-dir: ./htdocs/
+          # .env لوکال هرگز آپلود نمی‌شود؛ فایل‌های غیرضروری هم حذف می‌شوند
+          exclude: |
+            **/.git*/**
+            **/node_modules/**
+            **/tests/**
+            .env
+            .env.*
+            .github/**
+            .phpunit.result.cache
+            phpunit.xml
+            storage/logs/*.log
+            storage/framework/cache/**
+            storage/framework/views/**
+            backups/**
+          dangerous-clean-slate: false
+          log-level: minimal
+
+      - name: Run remote migrations
+        if: ${{ secrets.SITE_URL != '' }}
+        run: curl -fsS --max-time 120 "${{ secrets.SITE_URL }}/deploy/migrate?key=${{ secrets.DEPLOY_KEY }}"
