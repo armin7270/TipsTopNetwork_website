@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ["php83", "php83Packages.composer", "php83.extensions.gd", "php83.extensions.sqlite3", "php83.extensions.pdo_sqlite", "php83.extensions.pdo_pgsql", "php83.extensions.mbstring", "php83.extensions.bcmath", "php83.extensions.intl", "php83.extensions.zip", "postgresql", "nodejs_20"]
+nixPkgs = ["php83", "php83Packages.composer", "php83.extensions.gd", "php83.extensions.sqlite3", "php83.extensions.pdo_sqlite", "php83.extensions.pdo_pgsql", "php83.extensions.mbstring", "php83.extensions.bcmath", "php83.extensions.intl", "php83.extensions.zip", "postgresql", "nodejs_22"]
 
 [phases.install]
 cmds = ["composer install --no-dev --optimize-autoloader --no-interaction", "npm ci"]
