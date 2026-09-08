@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Events\OrderPaid;
 use App\Listeners\RewardReferrerListener;
 use App\Models\Setting;
+use App\Services\Xui\XuiService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -19,7 +20,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // XuiService همیشه با پارامتر server ساخته می‌شود (قابل mock در تست‌ها)
+        $this->app->bind(XuiService::class, fn ($app, array $params) => new XuiService($params['server']));
     }
 
     /**

@@ -7,6 +7,7 @@ use App\Models\Inbound;
 use App\Models\Server;
 use App\Services\AdminLog;
 use App\Services\Xui\XuiService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -21,18 +22,60 @@ class InboundController extends Controller
         return view('admin.inbounds', ['servers' => $servers, 'inbounds' => $inbounds]);
     }
 
+    /**
+     * تست اتصال با اطلاعات فرم (بدون ذخیره) — برای دکمه «بررسی اتصال» قبل از ذخیره
+     */
+    public function testUnsaved(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'server_id' => ['nullable', 'integer'],
+            'api_scheme' => ['required', 'in:http,https'],
+            'api_host' => ['required', 'string', 'max:200'],
+            'api_port' => ['required', 'integer', 'min:1', 'max:65535'],
+            'api_path' => ['nullable', 'string', 'max:190'],
+            'username' => ['required', 'string', 'max:100'],
+            'password' => ['nullable', 'string', 'max:200'],
+        ]);
+
+        if (! empty($data['server_id']) && ($base = Server::find($data['server_id']))) {
+            // ویرایش سرور موجود: رمز خالی یعنی از رمز ذخیره‌شده استفاده شود
+            $transient = clone $base;
+        } else {
+            if (($data['password'] ?? '') === '') {
+                return response()->json(['ok' => false, 'message' => __('برای تست اتصال، رمز عبور پنل را وارد کنید.')]);
+            }
+
+            $transient = new Server(['id' => 0]);
+        }
+
+        $transient->fill(collect($data)->only(['api_scheme', 'api_host', 'api_port', 'api_path', 'username', 'password'])->all());
+
+        $result = app(XuiService::class, ['server' => $transient])->testConnection();
+
+        return response()->json($result);
+    }
+
     public function storeServer(Request $request): RedirectResponse
     {
         $validated = $this->validateServer($request);
 
         $validated['is_active'] = $request->boolean('is_active', true);
-        $validated['ssl_verify'] = $request->boolean('ssl_verify', true);
+
+        // الزام بررسی موفق اتصال قبل از ذخیره
+        $transient = new Server($validated + ['id' => 0]);
+        $result = app(XuiService::class, ['server' => $transient])->testConnection();
+
+        if (! ($result['ok'] ?? false)) {
+            return back()
+                ->withInput()
+                ->with('error', __('ذخیره نشد — ابتدا اتصال به پنل را با موفقیت تست کنید').': '.$result['message']);
+        }
 
         $server = Server::create($validated);
 
-        AdminLog::record($request->user(), 'server_created', $server, $server->name);
+        AdminLog::record($request->user(), 'server_created', $server, $server->name.' — '.$result['message']);
 
-        return back()->with('success', __('سرور اضافه شد. حالا با دکمه «دریافت از پنل» اینباند‌ها را ایمپورت کنید.'));
+        return back()->with('success', __('سرور ذخیره شد (:test). حالا با دکمه «دریافت از پنل» اینباند‌ها را ایمپورت کنید.', ['test' => $result['message']]));
     }
 
     public function updateServer(Request $request, Server $server): RedirectResponse
@@ -44,13 +87,21 @@ class InboundController extends Controller
         }
 
         $validated['is_active'] = $request->boolean('is_active');
-        $validated['ssl_verify'] = $request->boolean('ssl_verify');
+
+        // الزام بررسی موفق اتصال قبل از ذخیره (با اطلاعات جدید + رمز قبلی اگر خالی بود)
+        $transient = clone $server;
+        $transient->fill($validated);
+        $result = app(XuiService::class, ['server' => $transient])->testConnection();
+
+        if (! ($result['ok'] ?? false)) {
+            return back()->with('error', __('ذخیره نشد — اتصال با اطلاعات جدید برقرار نشد').': '.$result['message']);
+        }
 
         $server->update($validated);
 
-        AdminLog::record($request->user(), 'server_updated', $server, $server->name);
+        AdminLog::record($request->user(), 'server_updated', $server, $server->name.' — '.$result['message']);
 
-        return back()->with('success', __('سرور به‌روزرسانی شد.'));
+        return back()->with('success', __('سرور ذخیره شد (:test).', ['test' => $result['message']]));
     }
 
     public function destroyServer(Request $request, Server $server): RedirectResponse
@@ -63,7 +114,7 @@ class InboundController extends Controller
 
     public function testServer(Server $server): RedirectResponse
     {
-        $result = (new XuiService($server))->testConnection();
+        $result = app(XuiService::class, ['server' => $server])->testConnection();
 
         return back()->with($result['ok'] ? 'success' : 'error', __('تست اتصال «:name»: :msg', ['name' => $server->name, 'msg' => $result['message']]));
     }
@@ -71,7 +122,7 @@ class InboundController extends Controller
     public function importInbounds(Server $server): RedirectResponse
     {
         try {
-            $list = (new XuiService($server))->inbounds();
+            $list = app(XuiService::class, ['server' => $server])->inbounds();
         } catch (\Throwable $e) {
             return back()->with('error', __('دریافت اینباندها ناموفق بود: :msg', ['msg' => $e->getMessage()]));
         }
@@ -146,7 +197,7 @@ class InboundController extends Controller
 
     protected function validateServer(Request $request, bool $nullablePassword = false): array
     {
-        $validated = $request->validate([
+        return $request->validate([
             'name' => ['required', 'string', 'max:100'],
             'api_scheme' => ['required', 'in:http,https'],
             'api_host' => ['required', 'string', 'max:200'],
@@ -156,24 +207,11 @@ class InboundController extends Controller
             'password' => [$nullablePassword ? 'nullable' : 'required', 'string', 'max:200'],
             'public_host' => ['nullable', 'string', 'max:200'],
             'is_active' => ['nullable', 'boolean'],
-            'ssl_verify' => ['nullable', 'boolean'],
         ], [
             'name.required' => __('نام سرور الزامی است.'),
             'api_host.required' => __('آدرس API سرور الزامی است.'),
             'username.required' => __('نام کاربری پنل الزامی است.'),
             'password.required' => __('رمز عبور پنل الزامی است.'),
         ]);
-
-        // چک‌باکس در فرم ویرایش سرور موجود نیست — فقط وقتی ارسال شده تغییر می‌کند
-        if ($request->has('ssl_verify')) {
-            $validated['ssl_verify'] = $request->boolean('ssl_verify');
-        } elseif (! $nullablePassword) {
-            // فرم افزودن سرور: پیش‌فرض فعال (چک‌باکس تیک‌خورده) یا اگر ارسال نشده بود
-            $validated['ssl_verify'] = false;
-        } else {
-            unset($validated['ssl_verify']);
-        }
-
-        return $validated;
     }
 }

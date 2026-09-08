@@ -22,14 +22,6 @@
                 @endif
                 <div dir="ltr" class="mt-2 text-start text-xs text-slate-400">{{ $server->api_scheme }}://{{ $server->api_host }}:{{ $server->api_port }}{{ $server->api_path ? '/'.$server->api_path : '' }}</div>
                 <div class="mt-1 text-xs text-slate-400">{{ $server->inbounds->count() }} {{ __('اینباند ثبت شده') }} @if($server->public_host) — {{ __('دامنه عمومی') }}: <span dir="ltr">{{ $server->public_host }}</span>@endif</div>
-                @if (! $server->shouldVerifySsl())
-                    <div class="mt-1 text-xs text-amber-600 dark:text-amber-400">⚠️ {{ __('بررسی گواهی SSL خاموش است (مناسب گواهی self-signed)') }}</div>
-                @endif
-                @if ($server->api_scheme === 'https')
-                    <div class="mt-1 text-xs {{ $server->ssl_verify ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400' }}">
-                        {{ $server->ssl_verify ? '🔒 '.__('بررسی SSL فعال') : '⚠️ '.__('بررسی SSL خاموش (self-signed)') }}
-                    </div>
-                @endif
                 <div class="mt-3 flex flex-wrap gap-2">
                     <form method="POST" action="{{ route('admin.servers.test', $server) }}">
                         @csrf
@@ -48,7 +40,7 @@
 
                 <details class="mt-3">
                     <summary class="cursor-pointer list-none text-xs font-black text-pink-600 dark:text-pink-400">⚙️ {{ __('ویرایش سرور') }}</summary>
-                    <form method="POST" action="{{ route('admin.servers.update', $server) }}" class="mt-3 grid gap-3 border-t border-dashed border-slate-900/10 pt-4 text-sm sm:grid-cols-2 dark:border-white/10">
+                    <form method="POST" action="{{ route('admin.servers.update', $server) }}" id="server-edit-{{ $server->id }}" class="mt-3 grid gap-3 border-t border-dashed border-slate-900/10 pt-4 text-sm sm:grid-cols-2 dark:border-white/10">
                         @csrf
                         @method('PUT')
                         <div class="sm:col-span-2">
@@ -78,11 +70,13 @@
                         <label class="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300">
                             <input type="checkbox" name="is_active" value="1" {{ $server->is_active ? 'checked' : '' }} class="h-4 w-4"> {{ __('سرور فعال باشد') }}
                         </label>
-                        <label class="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300" title="{{ __('برای پنل با گواهی self-signed خاموش کنید') }}">
-                            <input type="checkbox" name="ssl_verify" value="1" {{ $server->shouldVerifySsl() ? 'checked' : '' }} class="h-4 w-4"> {{ __('بررسی گواهی SSL') }}
-                        </label>
+                        <div class="sm:col-span-2 flex flex-wrap items-center gap-2">
+                            <button type="button" class="btn-ghost px-4 py-1.5 text-xs" data-xui-test
+                                data-form="server-edit-{{ $server->id }}" data-server-id="{{ $server->id }}">🔌 {{ __('بررسی اتصال') }}</button>
+                            <span data-xui-result class="text-xs font-bold"></span>
+                        </div>
                         <div class="sm:col-span-2">
-                            <button class="btn-primary px-4 py-1.5 text-xs">{{ __('ذخیره تغییرات') }}</button>
+                            <button class="btn-primary px-4 py-1.5 text-xs" data-xui-save disabled>{{ __('ذخیره تغییرات') }}</button>
                         </div>
                     </form>
                 </details>
@@ -93,7 +87,7 @@
 
         <div class="glass-card p-5">
             <h3 class="font-black text-slate-800 dark:text-white">{{ __('افزودن سرور جدید') }}</h3>
-            <form method="POST" action="{{ route('admin.servers.store') }}" class="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+            <form method="POST" action="{{ route('admin.servers.store') }}" id="server-add-form" class="mt-4 grid gap-3 text-sm sm:grid-cols-2">
                 @csrf
                 <div class="sm:col-span-2">
                     <label class="glass-label">{{ __('نام سرور (مثلاً «آلمان-تانل ایران»)') }}</label>
@@ -130,11 +124,15 @@
                     <label class="glass-label">{{ __('دامنه/IP عمومی کانفیگ‌ها (اختیاری — خالی = همان آدرس API)') }}</label>
                     <input type="text" name="public_host" dir="ltr" placeholder="your-iran-domain.ir" class="glass-input text-start">
                 </div>
-                <label class="flex items-center gap-2 text-xs font-bold text-slate-500 sm:col-span-2 dark:text-slate-400">
-                    <input type="checkbox" name="ssl_verify" value="1" checked class="h-4 w-4 rounded border-slate-300 bg-white/50 text-indigo-600 dark:border-white/20 dark:bg-white/10">
-                    {{ __('بررسی گواهی SSL هنگام اتصال HTTPS به پنل (برای گواهی self-signed روی لوکال، آن را خاموش کنید)') }}
-                </label>
-                <button class="btn-primary sm:col-span-2">{{ __('افزودن سرور') }}</button>
+                <div class="sm:col-span-2 flex flex-wrap items-center gap-2">
+                    <button type="button" class="btn-ghost px-4 py-1.5 text-xs" data-xui-test
+                        data-form="server-add-form">🔌 {{ __('بررسی اتصال') }}</button>
+                    <span data-xui-result class="text-xs font-bold"></span>
+                </div>
+                <p class="sm:col-span-2 text-xs text-amber-600 dark:text-amber-400">
+                    ⚠️ {{ __('تا وقتی تست اتصال موفق نشود، دکمه ذخیره فعال نمی‌شود.') }}
+                </p>
+                <button class="btn-primary sm:col-span-2" data-xui-save disabled>{{ __('افزودن سرور') }}</button>
             </form>
         </div>
     </div>
@@ -234,4 +232,67 @@
         </div>
     </div>
 </div>
+
+<script>
+(function () {
+    var csrf = document.querySelector('meta[name="csrf-token"]').content;
+    var testUrl = @json(route('admin.servers.test-connection'));
+
+    document.querySelectorAll('[data-xui-test]').forEach(function (btn) {
+        var form = document.getElementById(btn.dataset.form);
+
+        if (! form) return;
+
+        var result = form.querySelector('[data-xui-result]');
+        var save = form.querySelector('[data-xui-save]');
+
+        var show = function (ok, message) {
+            if (! result) return;
+            result.textContent = (ok ? '✅ ' : '❌ ') + (message || (ok ? 'اتصال موفق' : 'اتصال ناموفق بود'));
+            result.className = 'text-xs font-bold ' + (ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400');
+        };
+
+        btn.addEventListener('click', function () {
+            btn.disabled = true;
+
+            if (result) {
+                result.textContent = '⏳ در حال بررسی اتصال به پنل...';
+                result.className = 'text-xs font-bold text-amber-600 dark:text-amber-400';
+            }
+
+            var body = new FormData(form);
+
+            if (btn.dataset.serverId) {
+                body.set('server_id', btn.dataset.serverId);
+            }
+
+            fetch(testUrl, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrf,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: body
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                show(!! data.ok, data.message);
+                if (save) save.disabled = ! data.ok;
+            })
+            .catch(function () {
+                show(false, 'خطا در ارتباط با سرور سایت');
+                if (save) save.disabled = true;
+            })
+            .finally(function () { btn.disabled = false; });
+        });
+
+        // با هر تغییر فیلدها، دکمه ذخیره تا تست دوباره قفل می‌شود
+        form.addEventListener('input', function () {
+            if (save && ! save.disabled) save.disabled = true;
+            if (result) { result.textContent = ''; }
+        });
+    });
+})();
+</script>
 @endsection

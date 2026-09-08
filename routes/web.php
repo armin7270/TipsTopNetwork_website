@@ -225,6 +225,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
 
     // سرورها و اینباندها
     Route::get('/inbounds', [Admin\InboundController::class, 'index'])->middleware('admin.section:super')->name('inbounds.index');
+    Route::post('/servers/test-connection', [Admin\InboundController::class, 'testUnsaved'])->middleware('admin.section:super')->name('servers.test-connection');
     Route::post('/servers', [Admin\InboundController::class, 'storeServer'])->middleware('admin.section:super')->name('servers.store');
     Route::put('/servers/{server}', [Admin\InboundController::class, 'updateServer'])->middleware('admin.section:super')->name('servers.update');
     Route::delete('/servers/{server}', [Admin\InboundController::class, 'destroyServer'])->middleware('admin.section:super')->name('servers.destroy');

@@ -16,7 +16,6 @@ class Server extends Model
         'username',
         'password',
         'public_host',
-        'ssl_verify',
         'is_active',
         'last_check_at',
         'last_check_ok',
@@ -31,24 +30,10 @@ class Server extends Model
     {
         return [
             'password' => 'encrypted',
-            'ssl_verify' => 'boolean',
             'is_active' => 'boolean',
             'last_check_at' => 'datetime',
             'last_check_ok' => 'boolean',
         ];
-    }
-
-    /**
-     * آیا هنگام اتصال HTTPS به پنل، گواهی SSL بررسی شود؟
-     * روی لوکال/گواهی self-signed ادمین می‌تواند آن را خاموش کند.
-     */
-    public function shouldVerifySsl(): bool
-    {
-        if ($this->api_scheme !== 'https') {
-            return true;
-        }
-
-        return $this->ssl_verify !== false;
     }
 
     public function inbounds(): HasMany
