@@ -7,6 +7,7 @@ use App\Models\Setting;
 use App\Services\OrderService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class OrderController extends Controller
@@ -46,16 +47,31 @@ class OrderController extends Controller
             'paid_amount' => ['required', 'integer', 'min:1000'],
             'bank_reference' => ['required', 'string', 'min:4', 'max:100'],
             'paid_at' => ['required', 'date', 'before_or_equal:now'],
+            // رسید تصویری/PDF — اختیاری، حداکثر ۴ مگابایت، روی دیسک محلی (خارج از public)
+            'receipt' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:4096'],
         ], [
             'paid_amount.required' => __('مبلغ واریزی الزامی است.'),
             'bank_reference.required' => __('کد پیگیری/شماره ارجاع الزامی است.'),
             'paid_at.before_or_equal' => __('زمان پرداخت نمی‌تواند در آینده باشد.'),
+            'receipt.mimes' => __('رسید باید عکس (JPG/PNG/WEBP) یا PDF باشد.'),
+            'receipt.max' => __('حجم فایل رسید نباید بیشتر از ۴ مگابایت باشد.'),
         ]);
 
-        $order->update($validated + [
+        $update = $validated + [
             'status' => Order::STATUS_AWAITING_VERIFICATION,
             'admin_note' => null,
-        ]);
+        ];
+
+        if ($request->hasFile('receipt')) {
+            // حذف رسید قبلی در صورت آپلود مجدد
+            if ($order->receipt_path) {
+                Storage::disk('local')->delete($order->receipt_path);
+            }
+
+            $update['receipt_path'] = $request->file('receipt')->store('receipts', 'local');
+        }
+
+        $order->update($update);
 
         return redirect()
             ->route('orders.show', $order)

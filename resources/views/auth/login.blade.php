@@ -31,9 +31,12 @@
                 @error('password')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
             </div>
 
-            <label class="flex items-center gap-2 text-sm font-bold text-slate-500 dark:text-slate-400">
-                <input type="checkbox" name="remember" class="h-4 w-4 rounded-full border-slate-300 bg-white/50 text-pink-500 dark:border-white/20 dark:bg-white/10"> {{ __('مرا به خاطر بسپار') }}
-            </label>
+            <div class="flex items-center justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
+                <label class="flex items-center gap-2">
+                    <input type="checkbox" name="remember" class="h-4 w-4 rounded-full border-slate-300 bg-white/50 text-pink-500 dark:border-white/20 dark:bg-white/10"> {{ __('مرا به خاطر بسپار') }}
+                </label>
+                <a href="{{ route('password.request') }}" class="hover:underline">{{ __('رمز را فراموش کرده‌اید؟') }}</a>
+            </div>
 
             <button class="btn-primary w-full !py-3.5 !text-base">{{ __('ورود') }} 🚀</button>
 

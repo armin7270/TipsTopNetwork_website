@@ -1,0 +1,103 @@
+name: State Sync (بکاپ مهاجرت)
+
+# دانلود state (دیتابیس + فایل‌ها) از سایت و کامیت در ریپو —
+# برای اینکه هنگام اتمام تریال Railway، داده‌ها از طریق گیت‌هاب به اکانت جدید منتقل شوند.
+# راهنمای کامل: RAILWAY-MIGRATION.md
+
+on:
+  schedule:
+    - cron: '30 20 * * *' # هر روز 00:00 به وقت تهران
+  workflow_dispatch:
+    inputs:
+      site_url:
+        description: 'آدرس سایت (اگر Secret SITE_URL تنظیم نشده)'
+        required: false
+      promote:
+        description: 'کامیت مستقیم روی main (برای مهاجرت به اکانت جدید — باعث ری‌دپلوی می‌شود)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: state-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download encrypted state from site
+        env:
+          SITE_URL: ${{ inputs.site_url || secrets.SITE_URL }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+        run: |
+          if [ -z "$SITE_URL" ]; then
+            echo "❌ SITE_URL خالی است — در Settings → Secrets and variables → Actions اضافه کنید (مثلاً https://xxx.up.railway.app)"
+            exit 1
+          fi
+          if [ -z "$DEPLOY_KEY" ]; then
+            echo "❌ DEPLOY_KEY خالی است — در Settings → Secrets اضافه کنید (مقدار DEPLOY_KEY در Variables ریلی)"
+            exit 1
+          fi
+
+          URL="${SITE_URL%/}/deploy/state"
+          HTTP=$(curl -sS -w '%{http_code}' -H "X-Deploy-Key: $DEPLOY_KEY" -o state.bin "$URL")
+          echo "HTTP $HTTP ← $URL"
+
+          if [ "$HTTP" != "200" ]; then
+            echo "❌ دانلود ناموفق — مطمئن شوید STATE_KEY در Railway تنظیم شده و DEPLOY_KEY درست است."
+            exit 1
+          fi
+
+          MAGIC=$(head -c 8 state.bin)
+          SIZE=$(stat -c%s state.bin)
+          echo "size=$SIZE magic=$MAGIC"
+
+          if [ "$MAGIC" != "TSSTATE1" ]; then
+            echo "❌ فایل state معتبر نیست — سرور STATE_KEY ندارد یا پاسخ HTML است."
+            exit 1
+          fi
+
+          if [ "$SIZE" -lt 200 ]; then
+            echo "❌ state خیلی کوچک است — احتمالا خراب."
+            exit 1
+          fi
+
+          mkdir -p deploy-state
+          mv state.bin deploy-state/state.bin
+
+      - name: Commit to site-state branch (روتین)
+        if: ${{ inputs.promote != true }}
+        run: |
+          git config user.name "state-sync[bot]"
+          git config user.email "state-sync[bot]@users.noreply.github.com"
+          git checkout -B site-state
+          git add deploy-state/state.bin
+          if git diff --cached --quiet; then
+            echo "بدون تغییر نسبت به بکاپ قبلی — چیزی کامیت نشد."
+            exit 0
+          fi
+          git commit -m "state sync $(date -u '+%Y-%m-%d %H:%M') [skip ci]"
+          git push -f origin site-state
+          echo "✅ بکاپ روزانه در برنچ site-state ذخیره شد."
+
+      - name: Commit to main (مهاجرت به اکانت جدید)
+        if: ${{ inputs.promote == true }}
+        run: |
+          git config user.name "state-sync[bot]"
+          git config user.email "state-sync[bot]@users.noreply.github.com"
+          git add deploy-state/state.bin
+          if git diff --cached --quiet; then
+            echo "state با نسخه main یکسان است — چیزی کامیت نشد."
+            exit 0
+          fi
+          git commit -m "migration state $(date -u '+%Y-%m-%d %H:%M') [skip ci]"
+          git push origin main
+          echo "✅ state روی main کامیت شد — اگر Railway به ریپو وصل باشد، خودکار ری‌دپلوی می‌شود و داده‌ها بازیابی می‌گردند."

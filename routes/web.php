@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\BuyController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeployController;
@@ -33,6 +34,7 @@ Route::get('/sitemap.xml', function () {
 // نقاط کمکی دیپلوی هاست اشتراکی (محافظت با DEPLOY_KEY + محدودیت نرخ)
 Route::get('/deploy/migrate', [DeployController::class, 'migrate'])->middleware('throttle:10,1')->name('deploy.migrate');
 Route::get('/deploy/cron', [DeployController::class, 'cron'])->middleware('throttle:30,1')->name('deploy.cron');
+Route::get('/deploy/state', [DeployController::class, 'state'])->middleware('throttle:10,1')->name('deploy.state');
 
 // تغییر زبان (فارسی/انگلیسی)
 Route::get('/lang/{locale}', function (string $locale) {
@@ -49,6 +51,12 @@ Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
     Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:register');
+
+    // بازیابی رمز عبور با OTP پیامکی
+    Route::get('/forgot-password', [PasswordResetController::class, 'showForgot'])->name('password.request');
+    Route::post('/forgot-password', [PasswordResetController::class, 'sendOtp'])->name('password.send-otp')->middleware('throttle:5,1');
+    Route::get('/reset-password', [PasswordResetController::class, 'showReset'])->name('password.reset');
+    Route::post('/reset-password', [PasswordResetController::class, 'reset'])->name('password.update')->middleware('throttle:10,1');
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
@@ -125,17 +133,22 @@ Route::post('/webhooks/nowpayments', function (Request $request) {
     // تایید امضای IPN (HMAC-SHA512 با کلیدهای مرتب‌شده) — رمز از پنل مدیریت یا .env
     $secret = trim((string) (Setting::get('nowpayments_ipn_secret', env('NOWPAYMENTS_IPN_SECRET', ''))));
 
-    if ($secret !== '') {
-        $payload = $data;
-        ksort($payload);
+    // امنیت: بدون رمز IPN، وبهوک باید رد شود (fail-closed) — وگرنه هرکس می‌تواند کیف پول را شارژ کند
+    if ($secret === '') {
+        Log::error('nowpayments ipn rejected: no IPN secret configured — set nowpayments_ipn_secret in admin settings or NOWPAYMENTS_IPN_SECRET in .env');
 
-        $expected = hash_hmac('sha512', json_encode($payload, JSON_UNESCAPED_SLASHES), $secret);
+        return response()->json(['ok' => false, 'error' => 'ipn_secret_not_configured'], 403);
+    }
 
-        if (! hash_equals($expected, (string) $request->header('x-nowpayments-sig', ''))) {
-            Log::warning('nowpayments ipn rejected: invalid signature');
+    $payload = $data;
+    ksort($payload);
 
-            return response()->json(['ok' => false], 403);
-        }
+    $expected = hash_hmac('sha512', json_encode($payload, JSON_UNESCAPED_SLASHES), $secret);
+
+    if (! hash_equals($expected, (string) $request->header('x-nowpayments-sig', ''))) {
+        Log::warning('nowpayments ipn rejected: invalid signature');
+
+        return response()->json(['ok' => false], 403);
     }
 
     // شارژ کیف پول متصل به این پرداخت در صورت status موفق تایید می‌شود

@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Events\OrderPaid;
 use App\Http\Controllers\Controller;
+use App\Jobs\ActivatePaidOrder;
 use App\Models\Order;
 use App\Services\AdminLog;
 use App\Services\NotificationService;
-use App\Services\Vpn\ProvisioningService;
 use App\Support\CsvExport;
 use App\Support\Format;
 use Illuminate\Http\RedirectResponse;
@@ -46,7 +45,7 @@ class PaymentController extends Controller
         return view('admin.payments', ['orders' => $orders, 'q' => $q]);
     }
 
-    public function approve(Request $request, Order $order, ProvisioningService $provisioning): RedirectResponse
+    public function approve(Request $request, Order $order): RedirectResponse
     {
         if ($order->status !== Order::STATUS_AWAITING_VERIFICATION) {
             return back()->with('error', __('این سفارش در وضعیت «در انتظار تایید» نیست.'));
@@ -54,34 +53,25 @@ class PaymentController extends Controller
 
         $order->update(['verified_by' => $request->user()->id]);
 
+        // فعال‌سازی از طریق صف — در صورت خطای موقت پنل، به‌صورت خودکار retry می‌شود.
+        // با صف sync (لوکال/تست) اجرای همگام مثل قبل خطا را همین‌جا نشان می‌دهد.
         try {
-            if ($order->isRenewal()) {
-                $provisioning->extend($order);
-            } else {
-                $provisioning->provision($order);
-            }
+            ActivatePaidOrder::dispatch($order->id);
         } catch (\Throwable $e) {
             $order->update(['verified_by' => null]);
 
             return back()->with('error', __('خطا در ساخت کانفیگ').': '.$e->getMessage());
         }
 
-        $order->refresh();
-
-        // اطلاع به کاربر + رویداد پرداخت موفق (پاداش معرف — مشابه vPanel)
-        NotificationService::send(
-            $order->user,
-            'order_paid',
-            $order->isRenewal() ? __('سرویس شما تمدید شد ✅') : __('سرویس شما فعال شد ✅'),
-            __('پلن «:plan» شما فعال شد. لینک اشتراک در داشبورد موجود است.', ['plan' => $order->plan_name]),
-            route('orders.show', $order),
-        );
-
-        event(new OrderPaid($order));
-
         AdminLog::record($request->user(), 'payment_approved', $order, number_format($order->price_toman).' تومان');
 
-        return back()->with('success', __('سفارش #:id تایید شد و کانفیگ در پنل ساخته شد. ✅', ['id' => $order->id]));
+        $order->refresh();
+
+        if ($order->status === Order::STATUS_ACTIVE) {
+            return back()->with('success', __('سفارش #:id تایید شد و کانفیگ در پنل ساخته شد. ✅', ['id' => $order->id]));
+        }
+
+        return back()->with('success', __('سفارش #:id تایید شد. فعال‌سازی در صف قرار گرفت و به‌محض موفقیت به کاربر اطلاع داده می‌شود. ⏳', ['id' => $order->id]));
     }
 
     public function reject(Request $request, Order $order): RedirectResponse

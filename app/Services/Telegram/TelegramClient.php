@@ -23,7 +23,8 @@ class TelegramClient
         $this->http = new Client([
             'timeout' => 20,
             'connect_timeout' => 10,
-            'verify' => false,
+            // پیش‌فرض فعال؛ اگر سرور با گواهی/CA مشکل داشت، TELEGRAM_VERIFY_TLS=false در .env
+            'verify' => (bool) env('TELEGRAM_VERIFY_TLS', true),
         ]);
     }
 

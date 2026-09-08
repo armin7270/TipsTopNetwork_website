@@ -52,8 +52,8 @@ Schedule::call(function () {
     }
 })->hourly()->name('server-health-check')->withoutOverlapping();
 
-// بکاپ روزانه دیتابیس
-Schedule::command('app:backup-database')->dailyAt('03:30')->name('db-backup')->withoutOverlapping();
+// بکاپ روزانه دیتابیس (+ ارسال آفسایت به تلگرام مدیر اگر ربات و چت‌آیدی تنظیم شده باشد)
+Schedule::command('app:backup-database --send-telegram')->dailyAt('03:30')->name('db-backup')->withoutOverlapping();
 
 // بکاپ هفتگی آف‌سایت به تلگرام مدیر (برای مهاجرت بی‌دردسر بین اکانت‌ها)
 Schedule::command('db:backup-telegram')->weeklyOn(6, '04:00')->name('db-backup-telegram')->withoutOverlapping();

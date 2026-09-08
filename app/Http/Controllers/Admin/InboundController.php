@@ -25,6 +25,9 @@ class InboundController extends Controller
     {
         $validated = $this->validateServer($request);
 
+        $validated['is_active'] = $request->boolean('is_active', true);
+        $validated['ssl_verify'] = $request->boolean('ssl_verify', true);
+
         $server = Server::create($validated);
 
         AdminLog::record($request->user(), 'server_created', $server, $server->name);
@@ -39,6 +42,9 @@ class InboundController extends Controller
         if (empty($validated['password'])) {
             unset($validated['password']);
         }
+
+        $validated['is_active'] = $request->boolean('is_active');
+        $validated['ssl_verify'] = $request->boolean('ssl_verify');
 
         $server->update($validated);
 
@@ -140,7 +146,7 @@ class InboundController extends Controller
 
     protected function validateServer(Request $request, bool $nullablePassword = false): array
     {
-        return $request->validate([
+        $validated = $request->validate([
             'name' => ['required', 'string', 'max:100'],
             'api_scheme' => ['required', 'in:http,https'],
             'api_host' => ['required', 'string', 'max:200'],
@@ -149,11 +155,25 @@ class InboundController extends Controller
             'username' => ['required', 'string', 'max:100'],
             'password' => [$nullablePassword ? 'nullable' : 'required', 'string', 'max:200'],
             'public_host' => ['nullable', 'string', 'max:200'],
+            'is_active' => ['nullable', 'boolean'],
+            'ssl_verify' => ['nullable', 'boolean'],
         ], [
             'name.required' => __('نام سرور الزامی است.'),
             'api_host.required' => __('آدرس API سرور الزامی است.'),
             'username.required' => __('نام کاربری پنل الزامی است.'),
             'password.required' => __('رمز عبور پنل الزامی است.'),
         ]);
+
+        // چک‌باکس در فرم ویرایش سرور موجود نیست — فقط وقتی ارسال شده تغییر می‌کند
+        if ($request->has('ssl_verify')) {
+            $validated['ssl_verify'] = $request->boolean('ssl_verify');
+        } elseif (! $nullablePassword) {
+            // فرم افزودن سرور: پیش‌فرض فعال (چک‌باکس تیک‌خورده) یا اگر ارسال نشده بود
+            $validated['ssl_verify'] = false;
+        } else {
+            unset($validated['ssl_verify']);
+        }
+
+        return $validated;
     }
 }

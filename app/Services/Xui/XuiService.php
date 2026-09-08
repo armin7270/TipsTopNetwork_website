@@ -6,10 +6,17 @@ use App\Models\Inbound;
 use App\Models\Server;
 use GuzzleHttp\Client;
 use GuzzleHttp\Cookie\CookieJar;
+use GuzzleHttp\Cookie\SetCookie;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class XuiService
 {
+    /**
+     * طول عمر کش کوکی سشن پنل — جلوگیری از لاگین مجدد در هر درخواست
+     */
+    protected const SESSION_TTL = 300;
+
     protected Client $http;
 
     protected ?CookieJar $jar = null;
@@ -26,7 +33,8 @@ class XuiService
             'base_uri' => $base.'/',
             'timeout' => 25,
             'connect_timeout' => 10,
-            'verify' => false,
+            // تأیید گواهی SSL (پیش‌فرض فعال — برای گواهی self-signed از پنل مدیریت خاموش شود)
+            'verify' => $server->shouldVerifySsl(),
             'http_errors' => false,
         ]);
     }
@@ -46,9 +54,34 @@ class XuiService
     }
 
     /**
-     * ورود به پنل و ذخیره کوکی سشن
+     * ورود به پنل و ذخیره کوکی سشن (با استفاده از سشن کش‌شده در صورت وجود)
      */
     public function login(): void
+    {
+        // تلاش با سشن کش‌شده — اگر منقضی باشد، در call() دوباره لاگین می‌کنیم
+        $cached = Cache::get($this->sessionCacheKey());
+
+        if (is_array($cached) && ($cached['value'] ?? '') !== '') {
+            $jar = new CookieJar;
+            $jar->setCookie(new SetCookie([
+                'Name' => (string) ($cached['name'] ?? '3x-ui'),
+                'Value' => (string) $cached['value'],
+                'Domain' => $this->server->api_host,
+                'Path' => '/',
+            ]));
+
+            $this->jar = $jar;
+
+            return;
+        }
+
+        $this->performLogin();
+    }
+
+    /**
+     * لاگین واقعی به پنل و کش‌کردن کوکی سشن
+     */
+    protected function performLogin(): void
     {
         $this->jar = new CookieJar;
 
@@ -66,6 +99,20 @@ class XuiService
             $this->jar = null;
             throw new XuiException('ورود به پنل ناموفق بود: '.($data['msg'] ?? 'نام کاربری یا رمز عبور اشتباه است.'));
         }
+
+        // کش‌کردن کوکی سشن برای چند دقیقه (۵ دقیقه — امن: در انقضا دوباره لاگین می‌شود)
+        foreach ($this->jar->toArray() as $cookie) {
+            if (($cookie['Value'] ?? '') !== '') {
+                Cache::put($this->sessionCacheKey(), $cookie, now()->addSeconds(self::SESSION_TTL));
+
+                return;
+            }
+        }
+    }
+
+    protected function sessionCacheKey(): string
+    {
+        return 'xui_session_'.$this->server->id;
     }
 
     /**
@@ -157,7 +204,9 @@ class XuiService
                 || (($data['success'] ?? null) === false && stripos((string) ($data['msg'] ?? ''), 'login') !== false);
 
             if ($sessionExpired && $attempt === 0) {
-                $this->jar = null;
+                // سشن (کش‌شده یا جاری) منقضی شده — کش پاک و لاگین واقعی انجام می‌شود
+                Cache::forget($this->sessionCacheKey());
+                $this->performLogin();
 
                 continue;
             }

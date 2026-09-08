@@ -65,7 +65,7 @@
             @endif
 
             <h2 class="mt-7 font-black text-amber-600 dark:text-amber-400">{{ __('مرحله ۲: ثبت رسید واریز') }}</h2>
-            <form method="POST" action="{{ route('orders.receipt', $order) }}" class="mt-4 grid gap-4 sm:grid-cols-3">
+            <form method="POST" action="{{ route('orders.receipt', $order) }}" enctype="multipart/form-data" class="mt-4 grid gap-4 sm:grid-cols-3">
                 @csrf
                 <div>
                     <label class="glass-label" for="paid_amount">{{ __('مبلغ واریزی (تومان)') }}</label>
@@ -81,6 +81,11 @@
                     <label class="glass-label" for="paid_at">{{ __('زمان واریز') }}</label>
                     <input id="paid_at" name="paid_at" type="datetime-local" value="{{ old('paid_at', now()->format('Y-m-d\TH:i')) }}" required class="glass-input">
                     @error('paid_at')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                </div>
+                <div class="sm:col-span-3">
+                    <label class="glass-label" for="receipt">{{ __('تصویر/PDF رسید (اختیاری — حداکثر ۴ مگابایت)') }}</label>
+                    <input id="receipt" name="receipt" type="file" accept=".jpg,.jpeg,.png,.webp,.pdf" class="glass-input !py-2.5">
+                    @error('receipt')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                 </div>
                 <button class="btn-primary sm:col-span-3">{{ __('ثبت رسید و ارسال برای تایید') }}</button>
             </form>

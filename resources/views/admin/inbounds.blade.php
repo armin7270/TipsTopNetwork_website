@@ -22,6 +22,14 @@
                 @endif
                 <div dir="ltr" class="mt-2 text-start text-xs text-slate-400">{{ $server->api_scheme }}://{{ $server->api_host }}:{{ $server->api_port }}{{ $server->api_path ? '/'.$server->api_path : '' }}</div>
                 <div class="mt-1 text-xs text-slate-400">{{ $server->inbounds->count() }} {{ __('اینباند ثبت شده') }} @if($server->public_host) — {{ __('دامنه عمومی') }}: <span dir="ltr">{{ $server->public_host }}</span>@endif</div>
+                @if (! $server->shouldVerifySsl())
+                    <div class="mt-1 text-xs text-amber-600 dark:text-amber-400">⚠️ {{ __('بررسی گواهی SSL خاموش است (مناسب گواهی self-signed)') }}</div>
+                @endif
+                @if ($server->api_scheme === 'https')
+                    <div class="mt-1 text-xs {{ $server->ssl_verify ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400' }}">
+                        {{ $server->ssl_verify ? '🔒 '.__('بررسی SSL فعال') : '⚠️ '.__('بررسی SSL خاموش (self-signed)') }}
+                    </div>
+                @endif
                 <div class="mt-3 flex flex-wrap gap-2">
                     <form method="POST" action="{{ route('admin.servers.test', $server) }}">
                         @csrf
@@ -37,6 +45,47 @@
                         <button class="btn-danger px-3 py-1.5 text-xs">{{ __('حذف سرور') }}</button>
                     </form>
                 </div>
+
+                <details class="mt-3">
+                    <summary class="cursor-pointer list-none text-xs font-black text-pink-600 dark:text-pink-400">⚙️ {{ __('ویرایش سرور') }}</summary>
+                    <form method="POST" action="{{ route('admin.servers.update', $server) }}" class="mt-3 grid gap-3 border-t border-dashed border-slate-900/10 pt-4 text-sm sm:grid-cols-2 dark:border-white/10">
+                        @csrf
+                        @method('PUT')
+                        <div class="sm:col-span-2">
+                            <label class="glass-label">{{ __('نام سرور') }}</label>
+                            <input type="text" name="name" value="{{ $server->name }}" required class="glass-input">
+                        </div>
+                        <div>
+                            <label class="glass-label">{{ __('آدرس API') }}</label>
+                            <input type="text" name="api_host" value="{{ $server->api_host }}" required dir="ltr" class="glass-input text-start">
+                        </div>
+                        <div>
+                            <label class="glass-label">{{ __('پورت API') }}</label>
+                            <input type="number" name="api_port" value="{{ $server->api_port }}" required class="glass-input">
+                        </div>
+                        <div>
+                            <label class="glass-label">{{ __('نام کاربری پنل') }}</label>
+                            <input type="text" name="username" value="{{ $server->username }}" required dir="ltr" class="glass-input text-start">
+                        </div>
+                        <div>
+                            <label class="glass-label">{{ __('رمز عبور پنل (خالی = بدون تغییر)') }}</label>
+                            <input type="password" name="password" dir="ltr" class="glass-input text-start">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="glass-label">{{ __('دامنه/IP عمومی کانفیگ‌ها') }}</label>
+                            <input type="text" name="public_host" value="{{ $server->public_host }}" dir="ltr" class="glass-input text-start">
+                        </div>
+                        <label class="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300">
+                            <input type="checkbox" name="is_active" value="1" {{ $server->is_active ? 'checked' : '' }} class="h-4 w-4"> {{ __('سرور فعال باشد') }}
+                        </label>
+                        <label class="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300" title="{{ __('برای پنل با گواهی self-signed خاموش کنید') }}">
+                            <input type="checkbox" name="ssl_verify" value="1" {{ $server->shouldVerifySsl() ? 'checked' : '' }} class="h-4 w-4"> {{ __('بررسی گواهی SSL') }}
+                        </label>
+                        <div class="sm:col-span-2">
+                            <button class="btn-primary px-4 py-1.5 text-xs">{{ __('ذخیره تغییرات') }}</button>
+                        </div>
+                    </form>
+                </details>
             </div>
         @empty
             <p class="glass-card p-6 text-center text-sm text-slate-400">{{ __('هنوز سروری اضافه نکرده‌اید.') }}</p>
@@ -81,6 +130,10 @@
                     <label class="glass-label">{{ __('دامنه/IP عمومی کانفیگ‌ها (اختیاری — خالی = همان آدرس API)') }}</label>
                     <input type="text" name="public_host" dir="ltr" placeholder="your-iran-domain.ir" class="glass-input text-start">
                 </div>
+                <label class="flex items-center gap-2 text-xs font-bold text-slate-500 sm:col-span-2 dark:text-slate-400">
+                    <input type="checkbox" name="ssl_verify" value="1" checked class="h-4 w-4 rounded border-slate-300 bg-white/50 text-indigo-600 dark:border-white/20 dark:bg-white/10">
+                    {{ __('بررسی گواهی SSL هنگام اتصال HTTPS به پنل (برای گواهی self-signed روی لوکال، آن را خاموش کنید)') }}
+                </label>
                 <button class="btn-primary sm:col-span-2">{{ __('افزودن سرور') }}</button>
             </form>
         </div>
