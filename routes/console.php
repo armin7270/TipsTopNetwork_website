@@ -55,6 +55,9 @@ Schedule::call(function () {
 // بکاپ روزانه دیتابیس
 Schedule::command('app:backup-database')->dailyAt('03:30')->name('db-backup')->withoutOverlapping();
 
+// بکاپ هفتگی آف‌سایت به تلگرام مدیر (برای مهاجرت بی‌دردسر بین اکانت‌ها)
+Schedule::command('db:backup-telegram')->weeklyOn(6, '04:00')->name('db-backup-telegram')->withoutOverlapping();
+
 // اطلاع‌رسانی انقضای نزدیک سرویس‌ها (۳ روز قبل — مشابه vPanel)
 Schedule::call(function () {
     $orders = Order::query()

@@ -206,6 +206,28 @@ class TelegramClient
     }
 
     /**
+     * ارسال فایل لوکال به‌صورت داکیومنت (آپلود multipart)
+     */
+    public function sendLocalDocument(string $chatId, string $filePath, ?string $caption = null): array
+    {
+        if (! is_file($filePath) || ! is_readable($filePath)) {
+            throw new TelegramException('فایل یافت نشد: '.$filePath);
+        }
+
+        $multipart = [
+            ['name' => 'chat_id', 'contents' => $chatId],
+            ['name' => 'document', 'contents' => fopen($filePath, 'r'), 'filename' => basename($filePath)],
+            ['name' => 'parse_mode', 'contents' => 'HTML'],
+        ];
+
+        if ($caption) {
+            $multipart[] = ['name' => 'caption', 'contents' => mb_substr($caption, 0, 1000)];
+        }
+
+        return $this->upload('sendDocument', $multipart);
+    }
+
+    /**
      * حذف پیام
      */
     public function deleteMessage(string $chatId, int $messageId): array

@@ -77,6 +77,7 @@ class PagesRenderTest extends TestCase
             '/admin', '/admin/payments', '/admin/wallet-deposits', '/admin/orders',
             '/admin/tickets', '/admin/broadcast', '/admin/users', '/admin/plans',
             '/admin/inbounds', '/admin/settings', '/admin/setup', '/admin/activity-logs',
+            '/admin/migration',
         ];
 
         foreach ($pages as $page) {

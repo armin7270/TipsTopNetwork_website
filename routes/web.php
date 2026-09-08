@@ -163,6 +163,13 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::post('/setup/link-storage', [Admin\SetupController::class, 'linkStorage'])->middleware('admin.section:super')->name('setup.link-storage');
     Route::get('/activity-logs', [Admin\ActivityLogController::class, 'index'])->middleware('admin.section:super')->name('activity-logs.index');
 
+    // بکاپ و مهاجرت
+    Route::get('/migration', [Admin\MigrationController::class, 'index'])->middleware('admin.section:super')->name('migration.index');
+    Route::post('/migration/export-db', [Admin\MigrationController::class, 'exportDb'])->middleware('admin.section:super')->name('migration.export-db');
+    Route::post('/migration/export-files', [Admin\MigrationController::class, 'exportFiles'])->middleware('admin.section:super')->name('migration.export-files');
+    Route::post('/migration/import-db', [Admin\MigrationController::class, 'importDb'])->middleware('admin.section:super')->name('migration.import-db');
+    Route::post('/migration/import-files', [Admin\MigrationController::class, 'importFiles'])->middleware('admin.section:super')->name('migration.import-files');
+
     // پرداخت‌ها (صف تایید کارت به کارت)
     Route::get('/payments', [Admin\PaymentController::class, 'index'])->middleware('admin.section:finance')->name('payments.index');
     Route::post('/payments/{order}/approve', [Admin\PaymentController::class, 'approve'])->middleware('admin.section:finance')->name('payments.approve');

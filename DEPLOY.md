@@ -123,17 +123,19 @@ Railway سرور PHP کامل اجرا می‌کند و برای این پروژ
 1. کد را در گیت‌هاب ریپو جدید push کنید.
 2. در [railway.app](https://railway.app) → **New Project** → **Deploy from GitHub repo**.
 3. Railway به‌صورت خودکار `railway.json` و `nixpacks.toml` را می‌خواند و بیلد می‌کند.
-4. متغیرهای محیطی را در تب **Variables** اضافه کنید:
+4. داخل همان پروژه، **New → Database → PostgreSQL** اضافه کنید (مهم! SQLite روی Railway با هر دیپلوی پاک می‌شود).
+5. در سرویس وب، تب **Variables** را باز کنید و این‌ها را اضافه کنید (مقادیر Postgres را با Reference از پلاگین بدهید):
 
 ```env
 APP_NAME="TipStop Network"
 APP_ENV=production
 APP_DEBUG=false
 APP_URL=https://YOUR-DOMAIN.up.railway.app
-APP_KEY=          # با دستور php artisan key:generate --show بسازید
+APP_KEY=          # با دستور php artisan key:generate --show بسازید (این کلید را برای همیشه نگه دارید!)
 APP_LOCALE=fa
 
-DB_CONNECTION=sqlite
+DB_CONNECTION=pgsql
+DB_URL=${{Postgres.DATABASE_URL}}
 
 SESSION_DRIVER=database
 CACHE_STORE=database
@@ -144,8 +146,10 @@ ADMIN_PHONE=09120000000
 ADMIN_PASSWORD=admin
 ```
 
-5. در تب **Settings**، دامنه عمومی (Domain) بسازید.
-6. بعد از اولین اجرا، یک‌بار در ترمینال Railway دستور سیدر را اجرا کنید:
+> به‌جای `DB_URL` می‌توانید `DB_HOST/DB_PORT/DB_DATABASE/DB_USERNAME/DB_PASSWORD` را جدا با `${{Postgres.PGHOST}}` و... ست کنید.
+
+6. در تب **Settings**، دامنه عمومی (Domain) بسازید.
+7. بعد از اولین اجرا، یک‌بار در ترمینال Railway دستور سیدر را اجرا کنید:
    ```
    php artisan migrate --force && php artisan db:seed --force
    ```
@@ -163,6 +167,20 @@ ADMIN_PASSWORD=admin
 
 ### 💾 بکاپ دیتابیس
 دستور `php artisan app:backup-database` هر شب ساعت ۳:۳۰ خودکار اجرا می‌شود و ۱۴ نسخه آخر را در `storage/app/backups` نگه می‌دارد. برای دانلود بکاپ از Volume استفاده کنید.
+
+### 🔄 مهاجرت به اکانت جدید Railway (بدون از دست رفتن داده)
+وقتی کردیت/تریال اکانت تمام شد:
+
+**قبل از اتمام (در اکانت فعلی):**
+1. پنل ادمین → **🚚 بکاپ و مهاجرت** → «دانلود دامپ دیتابیس» + «دانلود فایل‌های عمومی» را ذخیره کنید.
+   - (خودکار هم هر هفته بکاپ به تلگرام مدیر ارسال می‌شود — از همان‌جا هم می‌توانید بردارید.)
+2. مقدار `APP_KEY` را از Variables کپی و جایی امن نگه دارید. ⚠️ **بدون کلید قبلی، رمزهای سرورها باز نمی‌شوند!**
+
+**در اکانت جدید:**
+1. پروژه تازه از همین ریپو + پلاگین **PostgreSQL**.
+2. همه Variables را عیناً کپی کنید (حتماً همان `APP_KEY` قبلی!).
+3. بعد از دیپلوی، وارد پنل ادمین شوید → **🚚 بکاپ و مهاجرت** → فایل‌ها را Import کنید.
+4. سرویس‌های `worker` و `cron` را مثل بالا بسازید، وبهوک تلگرام را با دامنه جدید ست کنید، یک خرید تستی انجام دهید. تمام! 🎉
 
 > 💡 دیتابیس SQLite به‌صورت پیش‌فرض روی `/tmp` ممکن است با هر دیپلوی ریست شود؛ برای پایداری، یک Volume به مسیر `/app/database` وصل کنید یا از MySQL دیتابیس سرویس Railway استفاده کنید (`DB_CONNECTION=mysql` + مقادیر `DB_HOST` و...).
 
