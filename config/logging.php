@@ -18,7 +18,9 @@ return [
     |
     */
 
-    'default' => env('LOG_CHANNEL', 'stack'),
+    // روی Railway به‌صورت پیش‌فرض stderr تا اکسپشن‌ها در لاگ‌های پلتفرم دیده شوند
+    // (لاگ فایلی روی دیسک ephemeral گم می‌شود و در داشبورد دیده نمی‌شود)
+    'default' => env('LOG_CHANNEL', env('RAILWAY_ENVIRONMENT') ? 'stderr' : 'stack'),
 
     /*
     |--------------------------------------------------------------------------
