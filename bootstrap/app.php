@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsureAdmin;
 use App\Http\Middleware\EnsureAdminSection;
+use App\Http\Middleware\ForceHttps;
 use App\Http\Middleware\RedirectIfPasswordChangeRequired;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
@@ -25,6 +26,8 @@ return $app = Application::configure(basePath: dirname(__DIR__))
             SetLocale::class,
             RedirectIfPasswordChangeRequired::class,
         ]);
+
+        $middleware->append(ForceHttps::class);
 
         // پروکسی‌های معتبر برای تشخیص IP و HTTPS واقعی.
         // روی VPS مستقیم، TRUSTED_PROXIES را در .env با IP پروکسی (مثلاً Cloudflare) تنظیم کنید؛
