@@ -116,14 +116,16 @@ document.addEventListener('mousemove', function (e) {
 
 // ------------------------------------------------------------
 // تغییر ظاهر روشن/تاریک
+// (چون app.js به‌صورت ES Module لود می‌شود، توابع سطح ماژول روی window
+//  قرار نمی‌گیرند؛ برای onclick در HTML باید صریحاً وصل شوند)
 // ------------------------------------------------------------
-function toggleTheme() {
+window.toggleTheme = function toggleTheme() {
     var d = document.documentElement;
 
     d.classList.toggle('dark');
 
     try { localStorage.setItem('theme', d.classList.contains('dark') ? 'dark' : 'light'); } catch (e) {}
-}
+};
 
 // ------------------------------------------------------------
 // دکمه‌های کپی
@@ -149,7 +151,7 @@ document.addEventListener('click', function (e) {
 // ------------------------------------------------------------
 // منوی موبایل
 // ------------------------------------------------------------
-function toggleMobileMenu() {
+window.toggleMobileMenu = function toggleMobileMenu() {
     var menu = document.getElementById('mobile-menu');
     var burger = document.getElementById('burger');
 
