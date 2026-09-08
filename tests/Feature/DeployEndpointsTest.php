@@ -14,6 +14,7 @@ class DeployEndpointsTest extends TestCase
         // DEPLOY_KEY در محیط تست ست نیست → 404
         $this->get('/deploy/migrate?key=anything')->assertNotFound();
         $this->get('/deploy/cron?key=anything')->assertNotFound();
+        $this->get('/deploy/status?key=anything')->assertNotFound();
     }
 
     public function test_deploy_endpoints_reject_wrong_key(): void
@@ -23,6 +24,25 @@ class DeployEndpointsTest extends TestCase
         try {
             $this->get('/deploy/migrate?key=wrong')->assertForbidden();
             $this->get('/deploy/cron?key=wrong')->assertForbidden();
+            $this->get('/deploy/status?key=wrong')->assertForbidden();
+        } finally {
+            putenv('DEPLOY_KEY');
+        }
+    }
+
+    public function test_deploy_status_reports_diagnostics(): void
+    {
+        putenv('DEPLOY_KEY=test-secret-key');
+
+        try {
+            $response = $this->get('/deploy/status?key=test-secret-key');
+            $response->assertOk();
+            $response->assertJsonStructure([
+                'ok', 'app_key', 'app_env', 'app_debug', 'app_url',
+                'db' => ['ok', 'driver', 'error'],
+                'tables', 'storage_writable', 'storage_linked', 'queue', 'php',
+            ]);
+            $this->assertTrue($response->json('db.ok'));
         } finally {
             putenv('DEPLOY_KEY');
         }

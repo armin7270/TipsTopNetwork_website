@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Symfony\Component\HttpFoundation\Response;
 use ZipArchive;
 
@@ -31,6 +32,73 @@ class DeployController extends Controller
     }
 
     /**
+     * اگر درایور sqlite است و فایل دیتابیس وجود ندارد، می‌سازد
+     * (وگرنه migrate با خطای «Database file does not exist» می‌میرد)
+     */
+    protected function ensureSqliteFile(): ?string
+    {
+        if (config('database.default') !== 'sqlite') {
+            return null;
+        }
+
+        $file = config('database.connections.sqlite.database');
+
+        if (! $file || $file === ':memory:' || is_file($file)) {
+            return null;
+        }
+
+        $dir = dirname($file);
+
+        if (! is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        touch($file);
+
+        return $file;
+    }
+
+    /**
+     * عیب‌یابی استقرار: وضعیت کلید، دیتابیس، جداول، storage — با DEPLOY_KEY
+     */
+    public function status(Request $request): JsonResponse
+    {
+        $this->authorizeKey($request);
+
+        $db = ['ok' => false, 'driver' => config('database.default'), 'error' => null];
+        $tables = [];
+
+        try {
+            DB::connection()->getPdo();
+            $db['ok'] = true;
+
+            foreach (['users', 'settings', 'plans', 'orders', 'transactions', 'servers', 'inbounds'] as $table) {
+                try {
+                    $tables[$table] = Schema::hasTable($table);
+                } catch (\Throwable) {
+                    $tables[$table] = false;
+                }
+            }
+        } catch (\Throwable $e) {
+            $db['error'] = mb_substr($e->getMessage(), 0, 300);
+        }
+
+        return response()->json([
+            'ok' => (bool) config('app.key') && $db['ok'],
+            'app_key' => (bool) config('app.key'),
+            'app_env' => config('app.env'),
+            'app_debug' => (bool) config('app.debug'),
+            'app_url' => config('app.url'),
+            'db' => $db,
+            'tables' => $tables,
+            'storage_writable' => is_writable(storage_path()),
+            'storage_linked' => is_link(public_path('storage')) || is_dir(public_path('storage')),
+            'queue' => config('queue.default'),
+            'php' => PHP_VERSION,
+        ]);
+    }
+
+    /**
      * اجرای مایگریشن + سید اولیه + لینک storage (فقط یک‌بار بعد از آپلود)
      */
     public function migrate(Request $request): JsonResponse
@@ -38,6 +106,8 @@ class DeployController extends Controller
         $this->authorizeKey($request);
 
         $log = [];
+
+        $this->ensureSqliteFile();
 
         Artisan::call('migrate', ['--force' => true]);
         $log['migrate'] = trim(Artisan::output());

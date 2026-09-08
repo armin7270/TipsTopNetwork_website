@@ -34,6 +34,7 @@ Route::get('/sitemap.xml', function () {
 // نقاط کمکی دیپلوی هاست اشتراکی (محافظت با DEPLOY_KEY + محدودیت نرخ)
 Route::get('/deploy/migrate', [DeployController::class, 'migrate'])->middleware('throttle:10,1')->name('deploy.migrate');
 Route::get('/deploy/cron', [DeployController::class, 'cron'])->middleware('throttle:30,1')->name('deploy.cron');
+Route::get('/deploy/status', [DeployController::class, 'status'])->middleware('throttle:10,1')->name('deploy.status');
 Route::get('/deploy/state', [DeployController::class, 'state'])->middleware('throttle:10,1')->name('deploy.state');
 
 // تغییر زبان (فارسی/انگلیسی)
