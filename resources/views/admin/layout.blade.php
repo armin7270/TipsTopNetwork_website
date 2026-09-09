@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="{{ app()->getLocale() }}" dir="{{ app()->getLocale() === 'fa' ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="UTF-8">
@@ -90,6 +90,26 @@
     </aside>
 
     <main class="min-w-0 flex-1 p-4 md:p-6">
+        @php
+            $ephemeralDb = config('database.default') === 'sqlite' && env('RAILWAY_ENVIRONMENT') !== null;
+        @endphp
+        @if ($ephemeralDb)
+            <div class="animate-pop-in glass-card mb-5 border-amber-400/50 !rounded-2xl p-4 text-sm">
+                <div class="flex flex-wrap items-start gap-3">
+                    <span class="text-xl">⚠️</span>
+                    <div class="flex-1">
+                        <b class="text-amber-600 dark:text-amber-400">{{ __('دیتابیس شما موقتی است!') }}</b>
+                        <p class="mt-1 text-xs leading-6 text-slate-600 dark:text-slate-300">
+                            {{ __('الان روی SQLite داخلی کانتینر اجرا می‌شوید — با هر ری‌استارت/دیپلوی همه تنظیمات (کارت‌ها، ربات، ...) پاک می‌شوند. برای رفع: در Railway یک دیتابیس PostgreSQL اضافه کنید و در Variables همین دو خط را بگذارید:') }}
+                        </p>
+                        <code dir="ltr" class="mt-2 block rounded-xl bg-slate-900/80 p-2 text-[11px] text-emerald-300">@verbatim
+DB_CONNECTION=pgsql
+DB_URL=${{Postgres.DATABASE_URL}}
+@endverbatim</code>
+                    </div>
+                </div>
+            </div>
+        @endif
         <div class="glass mb-6 flex items-center justify-between rounded-3xl px-5 py-3">
             <h1 class="text-lg font-black text-slate-800 dark:text-white">{{ __('پنل مدیریت') }}</h1>
             <div class="flex items-center gap-2">
