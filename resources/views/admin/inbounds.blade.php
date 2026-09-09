@@ -20,8 +20,8 @@
                         @if (! $server->last_check_ok && $server->last_check_error)— {{ \Illuminate\Support\Str::limit($server->last_check_error, 80) }}@endif
                     </div>
                 @endif
-                <div dir="ltr" class="mt-2 text-start text-xs text-slate-400">{{ $server->api_scheme }}://{{ $server->api_host }}:{{ $server->api_port }}{{ $server->api_path ? '/'.$server->api_path : '' }}</div>
                 <div class="mt-1 text-xs text-slate-400">{{ $server->inbounds->count() }} {{ __('اینباند ثبت شده') }} @if($server->public_host) — {{ __('دامنه عمومی') }}: <span dir="ltr">{{ $server->public_host }}</span>@endif</div>
+                <div class="mt-1"><span class="badge-cyan">{{ $server->panelTypeLabel() }}</span></div>
                 <div class="mt-3 flex flex-wrap gap-2">
                     <form method="POST" action="{{ route('admin.servers.test', $server) }}">
                         @csrf
@@ -48,12 +48,24 @@
                             <input type="text" name="name" value="{{ $server->name }}" required class="glass-input">
                         </div>
                         <div>
+                            <label class="glass-label">{{ __('نوع پنل') }}</label>
+                            <select name="panel_type" class="glass-input">
+                                @foreach (\App\Models\Server::PANEL_TYPES as $key => $label)
+                                    <option value="{{ $key }}" {{ $server->panel_type === $key ? 'selected' : '' }}>{{ __($label) }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
                             <label class="glass-label">{{ __('آدرس API') }}</label>
                             <input type="text" name="api_host" value="{{ $server->api_host }}" required dir="ltr" class="glass-input text-start">
                         </div>
                         <div>
                             <label class="glass-label">{{ __('پورت API') }}</label>
                             <input type="number" name="api_port" value="{{ $server->api_port }}" required class="glass-input">
+                        </div>
+                        <div>
+                            <label class="glass-label">{{ __('مسیر مخفی پنل (بدون /)') }}</label>
+                            <input type="text" name="api_path" value="{{ $server->api_path }}" dir="ltr" class="glass-input text-start">
                         </div>
                         <div>
                             <label class="glass-label">{{ __('نام کاربری پنل') }}</label>
@@ -92,6 +104,13 @@
                 <div class="sm:col-span-2">
                     <label class="glass-label">{{ __('نام سرور (مثلاً «آلمان-تانل ایران»)') }}</label>
                     <input type="text" name="name" required class="glass-input">
+                </div>
+                <div>
+                    <label class="glass-label">{{ __('نوع پنل') }}</label>
+                    <select name="panel_type" class="glass-input">
+                        <option value="xui">3x-ui / TX-UI</option>
+                        <option value="marzban">Marzban</option>
+                    </select>
                 </div>
                 <div>
                     <label class="glass-label">{{ __('پروتکل API') }}</label>

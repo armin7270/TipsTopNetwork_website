@@ -30,6 +30,7 @@ class ServerConnectionTest extends TestCase
     {
         return array_merge([
             'name' => 'پنل تست',
+            'panel_type' => 'xui',
             'api_scheme' => 'http',
             'api_host' => '127.0.0.1',
             'api_port' => 2053,

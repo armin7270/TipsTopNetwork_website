@@ -40,7 +40,7 @@
     @endif
 
     <h2 class="mt-8 font-black text-slate-800 dark:text-white">{{ __('اطلاعات رسید') }}</h2>
-    <form method="POST" action="{{ route('wallet.deposit.receipt', $transaction) }}" class="mt-4 grid gap-4 sm:grid-cols-2">
+    <form method="POST" action="{{ route('wallet.deposit.receipt', $transaction) }}" enctype="multipart/form-data" class="mt-4 grid gap-4 sm:grid-cols-2">
         @csrf
         <div>
             <label class="mb-1 block text-xs font-bold text-slate-500 dark:text-slate-400">{{ __('کد پیگیری / شماره ارجاع') }}</label>
@@ -51,6 +51,11 @@
             <label class="mb-1 block text-xs font-bold text-slate-500 dark:text-slate-400">{{ __('زمان پرداخت') }}</label>
             <input type="datetime-local" name="paid_at" value="{{ old('paid_at', now()->format('Y-m-d\TH:i')) }}" max="{{ now()->format('Y-m-d\TH:i') }}" required class="glass-input w-full" dir="ltr">
             @error('paid_at')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+        </div>
+        <div class="sm:col-span-2">
+            <label class="mb-1 block text-xs font-bold text-slate-500 dark:text-slate-400">{{ __('عکس یا فایل رسید (اختیاری — JPG/PNG/WEBP/PDF حداکثر ۴ مگابایت)') }}</label>
+            <input type="file" name="receipt" accept=".jpg,.jpeg,.png,.webp,.pdf" class="glass-input w-full">
+            @error('receipt')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
         </div>
         <div class="sm:col-span-2">
             <button class="btn-primary w-full sm:w-auto">{{ __('ثبت رسید و ارسال برای تایید') }}</button>

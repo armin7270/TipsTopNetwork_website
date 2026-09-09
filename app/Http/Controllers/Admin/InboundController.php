@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Inbound;
 use App\Models\Server;
 use App\Services\AdminLog;
+use App\Services\Marzban\MarzbanService;
 use App\Services\Xui\XuiService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -23,12 +24,23 @@ class InboundController extends Controller
     }
 
     /**
+     * ساخت سرویس مناسب بر اساس نوع پنل سرور
+     */
+    protected function connectionService(Server $server): XuiService|MarzbanService
+    {
+        return $server->panel_type === 'marzban'
+            ? new MarzbanService($server)
+            : app(XuiService::class, ['server' => $server]);
+    }
+
+    /**
      * تست اتصال با اطلاعات فرم (بدون ذخیره) — برای دکمه «بررسی اتصال» قبل از ذخیره
      */
     public function testUnsaved(Request $request): JsonResponse
     {
         $data = $request->validate([
             'server_id' => ['nullable', 'integer'],
+            'panel_type' => ['required', 'in:xui,marzban'],
             'api_scheme' => ['required', 'in:http,https'],
             'api_host' => ['required', 'string', 'max:200'],
             'api_port' => ['required', 'integer', 'min:1', 'max:65535'],
@@ -48,11 +60,9 @@ class InboundController extends Controller
             $transient = new Server(['id' => 0]);
         }
 
-        $transient->fill(collect($data)->only(['api_scheme', 'api_host', 'api_port', 'api_path', 'username', 'password'])->all());
+        $transient->fill(collect($data)->only(['panel_type', 'api_scheme', 'api_host', 'api_port', 'api_path', 'username', 'password'])->all());
 
-        $result = app(XuiService::class, ['server' => $transient])->testConnection();
-
-        return response()->json($result);
+        return response()->json($this->connectionService($transient)->testConnection());
     }
 
     public function storeServer(Request $request): RedirectResponse
@@ -63,7 +73,7 @@ class InboundController extends Controller
 
         // الزام بررسی موفق اتصال قبل از ذخیره
         $transient = new Server($validated + ['id' => 0]);
-        $result = app(XuiService::class, ['server' => $transient])->testConnection();
+        $result = $this->connectionService($transient)->testConnection();
 
         if (! ($result['ok'] ?? false)) {
             return back()
@@ -91,7 +101,7 @@ class InboundController extends Controller
         // الزام بررسی موفق اتصال قبل از ذخیره (با اطلاعات جدید + رمز قبلی اگر خالی بود)
         $transient = clone $server;
         $transient->fill($validated);
-        $result = app(XuiService::class, ['server' => $transient])->testConnection();
+        $result = $this->connectionService($transient)->testConnection();
 
         if (! ($result['ok'] ?? false)) {
             return back()->with('error', __('ذخیره نشد — اتصال با اطلاعات جدید برقرار نشد').': '.$result['message']);
@@ -114,7 +124,7 @@ class InboundController extends Controller
 
     public function testServer(Server $server): RedirectResponse
     {
-        $result = app(XuiService::class, ['server' => $server])->testConnection();
+        $result = $this->connectionService($server)->testConnection();
 
         return back()->with($result['ok'] ? 'success' : 'error', __('تست اتصال «:name»: :msg', ['name' => $server->name, 'msg' => $result['message']]));
     }
@@ -122,7 +132,11 @@ class InboundController extends Controller
     public function importInbounds(Server $server): RedirectResponse
     {
         try {
-            $list = app(XuiService::class, ['server' => $server])->inbounds();
+            $service = $this->connectionService($server);
+
+            $list = $service instanceof MarzbanService
+                ? $service->listInbounds()
+                : $service->inbounds();
         } catch (\Throwable $e) {
             return back()->with('error', __('دریافت اینباندها ناموفق بود: :msg', ['msg' => $e->getMessage()]));
         }
@@ -199,6 +213,7 @@ class InboundController extends Controller
     {
         return $request->validate([
             'name' => ['required', 'string', 'max:100'],
+            'panel_type' => ['required', 'in:xui,marzban'],
             'api_scheme' => ['required', 'in:http,https'],
             'api_host' => ['required', 'string', 'max:200'],
             'api_port' => ['required', 'integer', 'min:1', 'max:65535'],

@@ -3,6 +3,7 @@
 use App\Models\Order;
 use App\Models\Server;
 use App\Models\Setting;
+use App\Services\Marzban\MarzbanService;
 use App\Services\NotificationService;
 use App\Services\SmsService;
 use App\Services\Telegram\TelegramClient;
@@ -24,7 +25,11 @@ Schedule::call(function () {
 Schedule::call(function () {
     foreach (Server::query()->where('is_active', true)->get() as $server) {
         try {
-            $result = (new XuiService($server))->testConnection();
+            $service = $server->panel_type === 'marzban'
+                ? new MarzbanService($server)
+                : new XuiService($server);
+
+            $result = $service->testConnection();
             $ok = (bool) ($result['ok'] ?? false);
             $error = $ok ? null : mb_substr((string) ($result['message'] ?? 'unknown'), 0, 400);
         } catch (Throwable $e) {

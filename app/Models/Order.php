@@ -32,6 +32,8 @@ class Order extends Model
     protected $fillable = [
         'user_id',
         'plan_id',
+        'discount_code_id',
+        'discount_amount',
         'renewal_of',
         'plan_name',
         'volume_gb',
@@ -42,6 +44,7 @@ class Order extends Model
         'payment_method',
         'xui_email',
         'xui_uuid',
+        'sub_url',
         'bank_reference',
         'receipt_path',
         'paid_amount',
@@ -81,6 +84,11 @@ class Order extends Model
     public function inbounds(): BelongsToMany
     {
         return $this->belongsToMany(Inbound::class)->with('server');
+    }
+
+    public function discountCode(): BelongsTo
+    {
+        return $this->belongsTo(DiscountCode::class);
     }
 
     public function statusLabel(): string

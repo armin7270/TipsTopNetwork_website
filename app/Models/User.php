@@ -30,6 +30,7 @@ class User extends Authenticatable
         'is_admin',
         'admin_role',
         'status',
+        'ip_address',
         'subscription_code',
         'balance',
         'referral_code',

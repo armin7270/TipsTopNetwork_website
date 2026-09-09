@@ -79,6 +79,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/buy/{plan}', [BuyController::class, 'show'])->name('buy');
     Route::post('/buy/{plan}', [BuyController::class, 'store'])->name('buy.store');
+    Route::post('/buy/{plan}/discount', [BuyController::class, 'applyDiscount'])->name('buy.discount.apply');
+    Route::post('/buy/discount/remove', [BuyController::class, 'removeDiscount'])->name('buy.discount.remove');
 
     // بازگشت از درگاه پرداخت آنلاین
     Route::get('/payment/callback', [OnlinePaymentController::class, 'callback'])->name('payment.callback');
@@ -238,4 +240,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     // تنظیمات
     Route::get('/settings', [Admin\SettingController::class, 'edit'])->middleware('admin.section:super')->name('settings.edit');
     Route::put('/settings', [Admin\SettingController::class, 'update'])->middleware('admin.section:super')->name('settings.update');
+
+    // کدهای تخفیف
+    Route::get('/discounts', [Admin\DiscountController::class, 'index'])->middleware('admin.section:super')->name('discounts.index');
+    Route::post('/discounts', [Admin\DiscountController::class, 'store'])->middleware('admin.section:super')->name('discounts.store');
+    Route::put('/discounts/{discount}', [Admin\DiscountController::class, 'update'])->middleware('admin.section:super')->name('discounts.update');
+    Route::post('/discounts/{discount}/toggle', [Admin\DiscountController::class, 'toggle'])->middleware('admin.section:super')->name('discounts.toggle');
+    Route::delete('/discounts/{discount}', [Admin\DiscountController::class, 'destroy'])->middleware('admin.section:super')->name('discounts.destroy');
 });

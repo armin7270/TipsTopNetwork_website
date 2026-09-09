@@ -114,14 +114,24 @@ class WalletController extends Controller
         $validated = $request->validate([
             'bank_reference' => ['required', 'string', 'min:4', 'max:100'],
             'paid_at' => ['required', 'date', 'before_or_equal:now'],
+            // رسید تصویری/PDF — اختیاری، حداکثر ۴ مگابایت
+            'receipt' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:4096'],
         ], [
             'bank_reference.required' => __('کد پیگیری/شماره ارجاع الزامی است.'),
             'paid_at.before_or_equal' => __('زمان پرداخت نمی‌تواند در آینده باشد.'),
+            'receipt.mimes' => __('رسید باید عکس (JPG/PNG/WEBP) یا PDF باشد.'),
+            'receipt.max' => __('حجم فایل رسید نباید بیشتر از ۴ مگابایت باشد.'),
         ]);
+
+        $meta = array_merge($transaction->meta ?? [], $validated);
+
+        if ($request->hasFile('receipt')) {
+            $meta['receipt_path'] = $request->file('receipt')->store('receipts', 'local');
+        }
 
         $transaction->update([
             'status' => Transaction::STATUS_AWAITING_VERIFICATION,
-            'meta' => array_merge($transaction->meta ?? [], $validated),
+            'meta' => $meta,
         ]);
 
         NotificationService::notifyAdmins(

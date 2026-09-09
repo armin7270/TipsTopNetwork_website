@@ -8,6 +8,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Services\Telegram\TelegramClient;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * سیستم معرفی (رفرال): هدیه خوش‌آمدگویی + پاداش معرف بعد از اولین خرید
@@ -51,6 +52,7 @@ class ReferralService
 
     /**
      * اعطای هدیه خوش‌آمدگویی به کاربر جدید دعوت‌شده
+     * ضد تقلب: اگر از یک IP دیگر حسابی با موجودی >= هدیه ساخته شده باشد، هدیه تعلق نمی‌گیرد
      */
     protected function grantWelcomeGift(User $user, User $referrer): void
     {
@@ -59,6 +61,21 @@ class ReferralService
 
         if ($welcomeAmount <= 0 || $referrer->balance < $minReferrerBalance) {
             return;
+        }
+
+        // ضد تقلب IP: ثبت‌نام هم‌IP با حساب بالاتر از مبلغ هدیه = سوءاستفاده احتمالی
+        if ($user->ip_address) {
+            $suspicious = User::query()
+                ->where('ip_address', $user->ip_address)
+                ->where('id', '!=', $user->id)
+                ->where('balance', '>=', $welcomeAmount)
+                ->exists();
+
+            if ($suspicious) {
+                Log::warning('referral welcome gift blocked (IP anti-fraud)', ['user' => $user->id, 'ip' => $user->ip_address]);
+
+                return;
+            }
         }
 
         DB::transaction(function () use ($user, $referrer, $welcomeAmount) {

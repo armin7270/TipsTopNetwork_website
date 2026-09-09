@@ -73,6 +73,7 @@
             @if ($me->isSuperAdmin())
                 <a href="{{ route('admin.broadcast.index') }}" class="block rounded-2xl px-4 py-2.5 transition {{ $current === 'broadcast' ? $navActive : $navIdle }}">📣 {{ __('برودکست') }}</a>
                 <a href="{{ route('admin.plans.index') }}" class="block rounded-2xl px-4 py-2.5 transition {{ $current === 'plans' ? $navActive : $navIdle }}">🏷️ {{ __('پلن‌ها') }}</a>
+                <a href="{{ route('admin.discounts.index') }}" class="block rounded-2xl px-4 py-2.5 transition {{ request()->routeIs('admin.discounts.*') ? $navActive : $navIdle }}">🏷️ {{ __('کدهای تخفیف') }}</a>
                 <a href="{{ route('admin.inbounds.index') }}" class="block rounded-2xl px-4 py-2.5 transition {{ $current === 'inbounds' ? $navActive : $navIdle }}">🖥️ {{ __('سرورها و اینباندها') }}</a>
                 <a href="{{ route('admin.settings.edit') }}" class="block rounded-2xl px-4 py-2.5 transition {{ $current === 'settings' ? $navActive : $navIdle }}">⚙️ {{ __('تنظیمات') }}</a>
                 <a href="{{ route('admin.migration.index') }}" class="block rounded-2xl px-4 py-2.5 transition {{ request()->routeIs('admin.migration.*') ? $navActive : $navIdle }}">🚚 {{ __('بکاپ و مهاجرت') }}</a>

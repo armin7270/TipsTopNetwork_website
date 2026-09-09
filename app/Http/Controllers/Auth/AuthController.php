@@ -39,7 +39,10 @@ class AuthController extends Controller
             'password.min' => __('رمز عبور باید حداقل ۸ کاراکتر باشد.'),
         ]);
 
-        $user = User::create($validated + ['status' => 'active']);
+        $user = User::create($validated + [
+            'status' => 'active',
+            'ip_address' => $request->ip(),
+        ]);
 
         // سیستم معرفی: اتصال به معرف + هدیه خوش‌آمدگویی
         app(ReferralService::class)->onUserRegistered($user, $validated['ref'] ?? $request->session()->pull('referral_code'));

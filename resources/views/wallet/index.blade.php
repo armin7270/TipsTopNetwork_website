@@ -12,10 +12,17 @@
     <h2 class="font-black text-slate-800 dark:text-white">{{ __('شارژ کیف پول') }}</h2>
     <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">{{ __('مبلغ مورد نظر را وارد کنید. حداقل شارژ :amount تومان است.', ['amount' => number_format($minDeposit)]) }}</p>
 
-    <form method="POST" action="{{ route('wallet.charge') }}" class="mt-4 flex flex-wrap gap-2">
+    <form method="POST" action="{{ route('wallet.charge') }}" class="mt-4 space-y-3">
         @csrf
-        <input type="number" name="amount" min="{{ $minDeposit }}" value="{{ $minDeposit }}" required class="glass-input flex-1" dir="ltr">
-        <button class="btn-primary">{{ __('ادامه و مشاهده کارت‌ها') }}</button>
+        <div class="flex flex-wrap gap-2">
+            @foreach ([50000, 100000, 250000, 500000] as $quick)
+                <button type="button" class="btn-ghost !px-4 !py-2 text-xs" onclick="this.closest('form').querySelector('input[name=amount]').value = {{ $quick }};">{{ number_format($quick) }}</button>
+            @endforeach
+        </div>
+        <div class="flex flex-wrap gap-2">
+            <input type="number" name="amount" min="{{ $minDeposit }}" value="{{ $minDeposit }}" required class="glass-input flex-1" dir="ltr">
+            <button class="btn-primary">{{ __('ادامه و مشاهده کارت‌ها') }}</button>
+        </div>
     </form>
 
     @if ($cryptoEnabled)

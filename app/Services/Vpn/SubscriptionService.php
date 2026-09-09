@@ -10,6 +10,7 @@ class SubscriptionService
 {
     /**
      * محتوای لینک اشتراک کاربر (base64 لیست کانفیگ‌ها)
+     * برای سفارش‌های Marzban، خود لینک اشتراک پنل برگردانده می‌شود
      */
     public function contentFor(User $user): string
     {
@@ -23,6 +24,13 @@ class SubscriptionService
 
         foreach ($orders as $order) {
             if (empty($order->xui_uuid) || empty($order->xui_email)) {
+                continue;
+            }
+
+            // سفارش Marzban: لینک اشتراک پنل را برمی‌گردانیم
+            if (! empty($order->sub_url)) {
+                $lines[] = $order->sub_url;
+
                 continue;
             }
 
@@ -77,6 +85,13 @@ class SubscriptionService
 
         foreach ($orders as $order) {
             if (empty($order->xui_uuid) || empty($order->xui_email)) {
+                continue;
+            }
+
+            // سفارش Marzban: فقط لینک اشتراک
+            if (! empty($order->sub_url)) {
+                $configs[] = ['label' => '🔗 Marzban — '.$order->plan_name, 'uri' => $order->sub_url];
+
                 continue;
             }
 

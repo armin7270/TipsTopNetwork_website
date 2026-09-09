@@ -14,13 +14,35 @@
             <div class="mt-6 rounded-3xl border border-pink-400/25 bg-pink-500/5 p-5">
                 <div class="flex items-center justify-between">
                     <span class="text-lg font-black text-slate-800 dark:text-white">{{ $plan->name }}</span>
-                    <span class="text-2xl font-black text-pink-600 dark:text-indigo-400">{{ number_format($plan->price_toman) }} <span class="text-sm font-medium text-slate-500">{{ __('تومان') }}</span></span>
+                    <span class="text-2xl font-black text-pink-600 dark:text-indigo-400">
+                        @if ($discountAmount > 0)
+                            <span class="text-base font-bold text-slate-400 line-through">{{ number_format($plan->price_toman) }}</span>
+                        @endif
+                        {{ number_format($finalPrice) }} <span class="text-sm font-medium text-slate-500">{{ __('تومان') }}</span>
+                    </span>
                 </div>
                 <div class="mt-3 flex flex-wrap gap-4 text-sm text-slate-500 dark:text-slate-400">
                     <span>📦 {{ __('حجم') }}: {{ $plan->volumeLabel() }}</span>
                     <span>⏳ {{ __('اعتبار') }}: {{ $plan->durationLabel() }}</span>
                 </div>
+                @if ($discountAmount > 0)
+                    <div class="animate-pop-in mt-3 flex items-center justify-between rounded-2xl border border-emerald-400/40 bg-emerald-500/10 p-2.5 text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                        <span>🏷️ {{ __('کد تخفیف') }}: <span dir="ltr">{{ $discountCode }}</span></span>
+                        <span>-{{ number_format($discountAmount) }} {{ __('تومان') }}</span>
+                        <form method="POST" action="{{ route('buy.discount.remove') }}">
+                            @csrf
+                            <button class="text-red-500 hover:underline">✕</button>
+                        </form>
+                    </div>
+                @endif
             </div>
+
+            {{-- کد تخفیف --}}
+            <form method="POST" action="{{ route('buy.discount.apply', $plan) }}" class="mt-4 flex gap-2">
+                @csrf
+                <input type="text" name="code" value="{{ old('code', $discountCode) }}" placeholder="{{ __('کد تخفیف دارید؟') }}" class="glass-input flex-1 uppercase" dir="ltr">
+                <button class="btn-ghost shrink-0">🏷️ {{ __('اعمال') }}</button>
+            </form>
 
             <form method="POST" action="{{ route('buy.store', $plan) }}" class="mt-6 space-y-4">
                 @csrf

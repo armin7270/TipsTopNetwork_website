@@ -3,6 +3,7 @@
 namespace App\Services\Vpn;
 
 use App\Models\Order;
+use App\Services\Marzban\MarzbanService;
 use App\Services\Xui\XuiService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -10,6 +11,8 @@ use Illuminate\Support\Str;
 class ProvisioningService
 {
     protected array $xuiCache = [];
+
+    protected array $marzbanCache = [];
 
     /**
      * ساخت کانفیگ‌های سفارش جدید در پنل (بعد از تایید پرداخت)
@@ -35,6 +38,8 @@ class ProvisioningService
         if ($ok === 0) {
             throw new \RuntimeException(__('ساخت کانفیگ در پنل ناموفق بود: :msg', ['msg' => implode(' | ', $errors)]));
         }
+
+        $this->afterProvision($order, $errors);
 
         $order->fill([
             'status' => Order::STATUS_ACTIVE,
@@ -96,6 +101,8 @@ class ProvisioningService
         if ($ok === 0) {
             throw new \RuntimeException(__('تمدید در پنل ناموفق بود: :msg', ['msg' => implode(' | ', $errors)]));
         }
+
+        $this->afterProvision($order, $errors);
 
         $order->fill([
             'status' => Order::STATUS_ACTIVE,
@@ -203,6 +210,41 @@ class ProvisioningService
         return 'tsn-u'.$order->user_id.'o'.$order->id;
     }
 
+    /**
+     * عملیات پس از ساخت/تمدید در پنل — درایور Marzban کاربر را آنجا می‌سازد
+     * و لینک اشتراک را ذخیره می‌کند (برای 3x-ui خنثی است)
+     */
+    protected function afterProvision(Order $order, array $errors = []): void
+    {
+        $server = $order->inbounds()->where('is_active', true)->with('server')->first()?->server;
+
+        if (! $server || $server->panel_type !== 'marzban') {
+            return;
+        }
+
+        $expiryTs = (int) ($order->expires_at?->timestamp ?? now()->addDays($order->duration_days)->timestamp);
+        $totalBytes = $this->volumeToBytes($order->volume_gb);
+
+        try {
+            $marzban = $this->marzban($server);
+            $created = $marzban->createUser($order->xui_email, $totalBytes, $expiryTs);
+
+            $order->sub_url = $created['sub_url'] ?: $order->sub_url;
+        } catch (\Throwable $e) {
+            // کلاینت ممکن است قبلاً ساخته شده باشد — تمدید/به‌روزرسانی می‌کنیم
+            try {
+                $marzban = $this->marzban($server);
+                $marzban->updateUser($order->xui_email, $totalBytes, $expiryTs);
+                $order->sub_url = $order->sub_url ?: '';
+            } catch (\Throwable $e2) {
+                Log::error('marzban provisioning failed', ['order' => $order->id, 'error' => $e2->getMessage()]);
+                $errors[] = 'Marzban: '.$e2->getMessage();
+            }
+        }
+
+        $order->save();
+    }
+
     protected function volumeToBytes(float $volumeGb): int
     {
         return $volumeGb > 0 ? (int) round($volumeGb * 1024 ** 3) : 0;
@@ -229,6 +271,11 @@ class ProvisioningService
         $serverId = $inbound->server->id;
 
         return $this->xuiCache[$serverId] ??= new XuiService($inbound->server);
+    }
+
+    protected function marzban($server): MarzbanService
+    {
+        return $this->marzbanCache[$server->id] ??= new MarzbanService($server);
     }
 
     /**

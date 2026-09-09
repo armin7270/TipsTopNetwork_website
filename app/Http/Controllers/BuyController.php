@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Plan;
+use App\Services\DiscountService;
 use App\Services\OrderService;
 use App\Services\Payments\ZarinPalService;
 use Illuminate\Http\RedirectResponse;
@@ -24,13 +25,47 @@ class BuyController extends Controller
             'plan' => $plan,
             'walletBalance' => $request->user()->balance,
             'onlineEnabled' => ZarinPalService::isEnabled(),
+            'discountCode' => session('discount_code'),
+            'discountAmount' => session('discount_amount', 0),
+            'finalPrice' => max(0, $plan->price_toman - (int) session('discount_amount', 0)),
         ]);
+    }
+
+    /**
+     * اعمال کد تخفیف روی پلن (پیش از پرداخت)
+     */
+    public function applyDiscount(Request $request, Plan $plan, DiscountService $discounts): RedirectResponse
+    {
+        abort_unless($plan->is_active, 404);
+
+        [$discount, $error] = $discounts->lookup((string) $request->input('code', ''), $plan->price_toman);
+
+        if ($error || ! $discount) {
+            return back()->with('error', $error ?? __('کد تخفیف نامعتبر است.'));
+        }
+
+        $amount = $discount->discountFor($plan->price_toman);
+
+        session([
+            'discount_code_id' => $discount->id,
+            'discount_code' => $discount->code,
+            'discount_amount' => $amount,
+        ]);
+
+        return back()->with('success', __('کد تخفیف اعمال شد: :amount تومان تخفیف 🎉', ['amount' => number_format($amount)]));
+    }
+
+    public function removeDiscount(): RedirectResponse
+    {
+        session()->forget(['discount_code_id', 'discount_code', 'discount_amount']);
+
+        return back()->with('success', __('کد تخفیف حذف شد.'));
     }
 
     /**
      * ثبت سفارش
      */
-    public function store(Request $request, Plan $plan): RedirectResponse
+    public function store(Request $request, Plan $plan, DiscountService $discounts): RedirectResponse
     {
         abort_unless($plan->is_active, 404);
 
@@ -40,8 +75,36 @@ class BuyController extends Controller
 
         abort_unless(in_array($paymentMethod, ['card', 'wallet', 'online'], true), 400);
 
+        // قیمت نهایی = پلن - تخفیف سشن (در صورت اعتبار)
+        $price = $plan->price_toman;
+        $discount = null;
+        $discountAmount = 0;
+
+        if (session('discount_code_id')) {
+            [$discount, $error] = $discounts->lookup((string) session('discount_code'), $price);
+
+            if ($discount && ! $error) {
+                $discountAmount = $discount->discountFor($price);
+                $price = max(0, $price - $discountAmount);
+            } else {
+                // کد سشن دیگر معتبر نیست — پاک می‌شود
+                session()->forget(['discount_code_id', 'discount_code', 'discount_amount']);
+            }
+        }
+
         // ساخت سفارش (تمدید خودکار در صورت وجود سرویس فعال)
         $order = $this->orders->createForPlan($user, $plan, source: 'web', paymentMethod: $paymentMethod);
+
+        if ($discount && $discountAmount > 0) {
+            $order->update([
+                'discount_code_id' => $discount->id,
+                'discount_amount' => $discountAmount,
+                'price_toman' => $price,
+            ]);
+
+            $discounts->consume($discount);
+            session()->forget(['discount_code_id', 'discount_code', 'discount_amount']);
+        }
 
         // پرداخت آنلاین (زرین‌پال) — هدایت به درگاه
         if ($paymentMethod === 'online') {
