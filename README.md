@@ -32,7 +32,7 @@ C:\Users\ARMIN7270\AppData\Local\php\php.exe artisan serve
 
 > 💡 **بکاپ خودکار:** یک تسک ویندوز به نام `TipStopDailyBackup` ثبت شده که هر روز ساعت ۳ صبح از دیتابیس بکاپ می‌گیرد و در پوشه `backups` ذخیره می‌کند.
 
-> 🚀 **دیپلوی روی Vercel / Railway:** راهنمای کامل در فایل [`DEPLOY.md`](DEPLOY.md).
+> 🚀 **دیپلوی روی Railway + مهاجرت به اکانت جدید:** راهنمای کامل قدم‌به‌قدم در [`DEPLOY_RAILWAY.md`](DEPLOY_RAILWAY.md) — راهنمای سایر هاست‌ها در [`DEPLOY.md`](DEPLOY.md).
 
 ---
 
